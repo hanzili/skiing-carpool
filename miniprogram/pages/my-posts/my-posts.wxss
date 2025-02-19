@@ -1,0 +1,155 @@
+.post-list {
+  width: 100%;
+}
+
+.post-item {
+  background: #fff;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
+}
+
+.post-content {
+  font-size: 28rpx;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+
+.post-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20rpx;
+  margin-top: 16rpx;
+}
+
+button[size="mini"] {
+  margin: 0;
+  padding: 0 20rpx;
+  line-height: 2;
+  font-size: 24rpx;
+}
+
+.btn-status {
+  background: #007AFF;
+  color: #fff;
+}
+
+.btn-status.btn-completed {
+  background: #999;
+}
+
+.btn-edit {
+  background: #4CAF50;
+  color: #fff;
+}
+
+.btn-delete {
+  background: #ff3b30;
+  color: #fff;
+}
+
+.empty-tip {
+  text-align: center;
+  color: #999;
+  padding: 40rpx;
+}
+
+.edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.edit-content {
+  background: #fff;
+  width: 650rpx;
+  padding: 40rpx 30rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.edit-header {
+  font-size: 32rpx;
+  font-weight: bold;
+  padding: 30rpx;
+  text-align: center;
+  color: #333;
+  border-bottom: 1rpx solid #eee;
+}
+
+.edit-form {
+  padding: 30rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.edit-textarea {
+  width: 100%;
+  height: 160rpx;
+  border: 1rpx solid #ddd;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.edit-input {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid #ddd;
+  padding: 0 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #eee;
+}
+
+.modal-btn {
+  flex: 1;
+  text-align: center;
+  height: 100rpx;
+  line-height: 100rpx;
+  font-size: 28rpx;
+}
+
+.modal-btn:first-child {
+  border-right: 1rpx solid #eee;
+}
+
+.modal-btn-primary {
+  color: #07c160;
+  font-weight: 500;
+}
+
+.modal-btn:active {
+  background-color: #f7f7f7;
+} 

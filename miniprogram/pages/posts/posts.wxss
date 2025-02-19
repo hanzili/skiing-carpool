@@ -1,0 +1,35 @@
+/* pages/posts/posts.wxss */
+.post-list {
+  width: 100%;
+}
+
+.post-item {
+  background: #fff;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
+}
+
+.post-content {
+  font-size: 28rpx;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+
+.post-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.post-status {
+  color: #007AFF;
+}
+
+.empty-tip {
+  text-align: center;
+  color: #999;
+  padding: 40rpx;
+}

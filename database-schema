@@ -1,0 +1,7 @@
+carpools: {
+  type: String,        // needCar 或 needPeople
+  content: String,     // 拼车信息
+  wechat: String,      // 微信号
+  status: String,      // active 或 completed
+  createTime: Date,    // 创建时间
+} 

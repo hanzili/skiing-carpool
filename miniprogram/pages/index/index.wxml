@@ -1,0 +1,14 @@
+<view class="container">
+  <view class="category-list">
+    <view 
+      wx:for="{{categories}}" 
+      wx:key="id"
+      class="category-item"
+      data-id="{{item.id}}"
+      bindtap="onCategoryTap"
+    >
+      <image src="{{item.icon}}" mode="aspectFit" class="category-icon"/>
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+</view> 

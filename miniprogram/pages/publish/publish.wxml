@@ -1,0 +1,20 @@
+<view class="container">
+  <radio-group class="type-select" bindchange="onTypeChange">
+    <radio value="needCar" checked>人找车</radio>
+    <radio value="needPeople">车找人</radio>
+  </radio-group>
+
+  <textarea 
+    placeholder="请输入拼车信息" 
+    bindinput="onContentInput"
+    value="{{content}}"
+  />
+
+  <input 
+    placeholder="请输入微信号" 
+    bindinput="onWechatInput"
+    value="{{wechat}}"
+  />
+
+  <button type="primary" bindtap="onSubmit">发布</button>
+</view> 

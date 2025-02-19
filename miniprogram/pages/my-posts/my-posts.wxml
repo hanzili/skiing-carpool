@@ -1,0 +1,90 @@
+<view class="container">
+  <!-- 添加调试信息 -->
+  <view class="debug-info" style="font-size: 24rpx; color: #666; margin-bottom: 20rpx;">
+    共有 {{posts.length}} 条记录
+  </view>
+  
+  <view class="post-list">
+    <view 
+      wx:for="{{posts}}" 
+      wx:key="_id"
+      class="post-item"
+    >
+      <view class="post-content">{{item.content}}</view>
+      <view class="post-info">
+        <text class="post-time">{{item.createTime}}</text>
+        <text class="post-type">{{item.type === 'needCar' ? '人找车' : '车找人'}}</text>
+      </view>
+      <view class="post-actions">
+        <button 
+          class="btn-edit"
+          size="mini"
+          bindtap="onEditPost"
+          data-id="{{item._id}}"
+          data-content="{{item.content}}"
+          data-wechat="{{item.wechat}}"
+          data-type="{{item.type}}"
+        >
+          编辑
+        </button>
+        <button 
+          class="btn-status {{item.status === 'completed' ? 'btn-completed' : ''}}"
+          size="mini"
+          bindtap="onStatusChange"
+          data-id="{{item._id}}"
+        >
+          {{item.status === 'active' ? '标记完成' : '重新激活'}}
+        </button>
+        <button 
+          class="btn-delete"
+          size="mini"
+          type="warn"
+          bindtap="onDeletePost"
+          data-id="{{item._id}}"
+        >
+          删除
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{posts.length === 0}}" class="empty-tip">
+    暂无发布信息
+  </view>
+
+  <!-- 编辑弹窗 -->
+  <view class="edit-modal" wx:if="{{showEditModal}}">
+    <view class="edit-content">
+      <view class="edit-header">编辑信息</view>
+      
+      <view class="edit-form">
+        <view class="form-item">
+          <text class="label">拼车信息</text>
+          <textarea 
+            class="edit-textarea"
+            value="{{editingPost.content}}"
+            placeholder="请输入拼车信息"
+            bindinput="onEditContentInput"
+            maxlength="200"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="label">微信号</text>
+          <input 
+            class="edit-input"
+            value="{{editingPost.wechat}}"
+            placeholder="请输入微信号"
+            bindinput="onEditWechatInput"
+            maxlength="30"
+          />
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <view class="modal-btn" bindtap="onEditCancel">取消</view>
+        <view class="modal-btn modal-btn-primary" bindtap="onEditSubmit">保存</view>
+      </view>
+    </view>
+  </view>
+</view> 
