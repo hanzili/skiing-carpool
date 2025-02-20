@@ -2,6 +2,8 @@ Page({
   data: {
     posts: [],
     type: '', // needCar 或 needPeople
+    showWechatModal: false,
+    currentWechat: ''
   },
 
   onLoad(options) {
@@ -39,12 +41,28 @@ Page({
     this.setData({ posts: formattedPosts })
   },
 
-  onPostTap(e) {
-    const { id } = e.currentTarget.dataset
-    wx.showModal({
-      title: '联系方式',
-      content: this.data.posts.find(p => p._id === id).wechat,
-      showCancel: false
+  showWechat(e) {
+    const { wechat } = e.currentTarget.dataset
+    this.setData({
+      showWechatModal: true,
+      currentWechat: wechat
+    })
+  },
+
+  hideWechat() {
+    this.setData({ showWechatModal: false })
+  },
+
+  copyWechat() {
+    wx.setClipboardData({
+      data: this.data.currentWechat,
+      success: () => {
+        wx.showToast({
+          title: '已复制微信号',
+          icon: 'success'
+        })
+        this.hideWechat()
+      }
     })
   }
 }) 

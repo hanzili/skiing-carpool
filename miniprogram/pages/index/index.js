@@ -1,9 +1,18 @@
 Page({
   data: {
     categories: [
-      { id: 'needCar', name: '人找车', icon: '../../images/need-car.png' },
-      { id: 'needPeople', name: '车找人', icon: '../../images/need-people.png' }
+      { id: 'needCar', name: '人找车' },
+      { id: 'needPeople', name: '车找人' }
     ]
+  },
+
+  onShow() {
+    if (typeof this.getTabBar === 'function' &&
+      this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 0
+      })
+    }
   },
 
   onCategoryTap(e) {

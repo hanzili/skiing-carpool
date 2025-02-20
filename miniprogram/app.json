@@ -12,18 +12,29 @@
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#4080ff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "images/home.png",
+        "selectedIconPath": "images/home-active.png"
       },
       {
         "pagePath": "pages/publish/publish",
-        "text": "发布"
+        "text": "发布",
+        "iconPath": "images/publish.png",
+        "selectedIconPath": "images/publish-active.png"
       },
       {
         "pagePath": "pages/my-posts/my-posts",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "images/profile.png",
+        "selectedIconPath": "images/profile-active.png"
       }
     ]
   }

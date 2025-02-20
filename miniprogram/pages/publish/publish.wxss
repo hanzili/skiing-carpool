@@ -1,1 +1,152 @@
 /* pages/publish/publish.wxss */
+.container {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+  box-sizing: border-box;
+}
+
+.header {
+  text-align: center;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.type-tabs {
+  display: flex;
+  background: white;
+  padding: 8rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.03);
+}
+
+.tab {
+  flex: 1;
+  height: 100rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+}
+
+.tab.active {
+  background: rgba(64, 128, 255, 0.08);
+}
+
+.tab-icon {
+  width: 44rpx;
+  height: 44rpx;
+  opacity: 0.6;
+}
+
+.tab.active .tab-icon {
+  opacity: 1;
+}
+
+.tab-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.tab.active .tab-text {
+  color: #4080ff;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-bottom: 32rpx;
+}
+
+.form-item {
+  background: white;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.message-input {
+  width: 100%;
+  height: 240rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+  padding-bottom: 48rpx;
+}
+
+.word-limit {
+  position: absolute;
+  right: 32rpx;
+  bottom: 32rpx;
+  font-size: 24rpx;
+  color: #999;
+  padding: 0 8rpx;
+  background: white;
+  z-index: 1;
+  line-height: 1;
+}
+
+.wechat-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.wechat-icon {
+  width: 36rpx;
+  height: 36rpx;
+  opacity: 0.6;
+}
+
+.wechat-field {
+  flex: 1;
+  font-size: 28rpx;
+  height: 44rpx;
+}
+
+.publish-btn {
+  width: 100%;
+  height: 88rpx;
+  background: #4080ff;
+  color: white;
+  font-size: 32rpx;
+  font-weight: 500;
+  border-radius: 44rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border: none;
+  position: relative;
+}
+
+.publish-btn.disabled {
+  background: #f7f8fa;
+  color: #999;
+  border: 1rpx solid #e5e6eb;
+}
+
+.publish-btn:active {
+  opacity: 0.9;
+}
+
+.placeholder {
+  color: #999;
+}

@@ -1,31 +1,152 @@
 /* pages/posts/posts.wxss */
-.post-list {
-  width: 100%;
+.container {
+  min-height: 100vh;
+  background: #f0f7ff;
+  padding: 24rpx;
 }
 
-.post-item {
-  background: #fff;
-  padding: 20rpx;
-  margin-bottom: 20rpx;
-  border-radius: 8rpx;
-  box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
+.header {
+  margin-bottom: 32rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.type-tag {
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.type-tag.people {
+  background: rgba(64, 128, 255, 0.1);
+  color: #4080ff;
+}
+
+.type-tag.car {
+  background: rgba(75, 192, 128, 0.1);
+  color: #4bc080;
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.post-card {
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.time {
+  font-size: 24rpx;
+  color: #999;
 }
 
 .post-content {
-  font-size: 28rpx;
-  line-height: 1.5;
-  margin-bottom: 16rpx;
+  font-size: 32rpx;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 32rpx;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
-.post-info {
+.post-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-tag {
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+}
+
+.status-tag.active {
+  background: rgba(64, 128, 255, 0.1);
+  color: #4080ff;
+}
+
+.status-tag.completed {
+  background: rgba(153, 153, 153, 0.1);
+  color: #999;
+}
+
+.contact-btn {
+  min-width: 180rpx;
+  height: 72rpx;
+  background: #4080ff;
+  color: white;
+  font-size: 28rpx;
+  border-radius: 36rpx;
+  padding: 0 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+/* 弹窗样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  width: 560rpx;
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+}
+
+.modal-header {
   display: flex;
   justify-content: space-between;
-  font-size: 24rpx;
-  color: #666;
+  align-items: center;
+  margin-bottom: 24rpx;
+  font-size: 32rpx;
+  font-weight: 500;
 }
 
-.post-status {
-  color: #007AFF;
+.close {
+  font-size: 40rpx;
+  color: #999;
+  padding: 8rpx;
+}
+
+.wechat-number {
+  text-align: center;
+  font-size: 36rpx;
+  color: #333;
+  margin: 32rpx 0;
+}
+
+.copy-btn {
+  background: #4080ff;
+  color: white;
+  border: none;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  margin-top: 24rpx;
 }
 
 .empty-tip {

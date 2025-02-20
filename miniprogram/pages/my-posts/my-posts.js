@@ -2,6 +2,7 @@ Page({
   data: {
     posts: [],
     showEditModal: false,
+    isLoading: true,
     editingPost: {
       id: '',
       content: '',
@@ -12,9 +13,17 @@ Page({
 
   onShow() {
     this.loadMyPosts()
+    if (typeof this.getTabBar === 'function' &&
+      this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 2
+      })
+    }
   },
 
   async loadMyPosts() {
+    this.setData({ isLoading: true })
+    
     const db = wx.cloud.database()
     const app = getApp()
     
@@ -53,7 +62,10 @@ Page({
       })
     }))
     
-    this.setData({ posts: formattedPosts })
+    this.setData({ 
+      posts: formattedPosts,
+      isLoading: false 
+    })
   },
 
   async onStatusChange(e) {

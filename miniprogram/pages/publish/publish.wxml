@@ -1,20 +1,50 @@
 <view class="container">
-  <radio-group class="type-select" bindchange="onTypeChange">
-    <radio value="needCar" checked>人找车</radio>
-    <radio value="needPeople">车找人</radio>
-  </radio-group>
+  <view class="header">
+    <view class="title">发布拼车</view>
+    <view class="subtitle">找到你的滑雪伙伴 ⛷️</view>
+  </view>
 
-  <textarea 
-    placeholder="请输入拼车信息" 
-    bindinput="onContentInput"
-    value="{{content}}"
-  />
+  <view class="type-tabs">
+    <view class="tab {{type === 'needCar' ? 'active' : ''}}" 
+          bindtap="onTypeChange" 
+          data-type="needCar">
+      <image class="tab-icon" src="/images/person.svg" />
+      <view class="tab-text">人找车</view>
+    </view>
+    <view class="tab {{type === 'needPeople' ? 'active' : ''}}" 
+          bindtap="onTypeChange" 
+          data-type="needPeople">
+      <image class="tab-icon" src="/images/car.svg" />
+      <view class="tab-text">车找人</view>
+    </view>
+  </view>
 
-  <input 
-    placeholder="请输入微信号" 
-    bindinput="onWechatInput"
-    value="{{wechat}}"
-  />
+  <view class="form">
+    <view class="form-item">
+      <textarea class="message-input" 
+                placeholder="请输入拼车信息：\n• 出发地点和目的地\n• 出发时间\n• 人数要求\n• 其他说明" 
+                placeholder-class="placeholder"
+                value="{{content}}"
+                bindinput="onContentInput"
+                maxlength="200" />
+      <view class="word-limit">{{content.length}}/200</view>
+    </view>
 
-  <button type="primary" bindtap="onSubmit">发布</button>
+    <view class="form-item">
+      <view class="wechat-input-wrapper">
+        <image class="wechat-icon" src="/images/wechat-gray.svg" />
+        <input class="wechat-field"
+               placeholder="请输入微信号，方便联系" 
+               placeholder-class="placeholder"
+               value="{{wechat}}"
+               bindinput="onWechatInput" />
+      </view>
+    </view>
+  </view>
+
+  <button class="publish-btn {{(!content || !wechat) ? 'disabled' : ''}}" 
+          bindtap="onSubmit"
+          disabled="{{!content || !wechat}}">
+    发布
+  </button>
 </view> 

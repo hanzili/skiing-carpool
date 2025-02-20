@@ -6,7 +6,8 @@ Page({
   },
 
   onTypeChange(e) {
-    this.setData({ type: e.detail.value })
+    const type = e.currentTarget.dataset.type
+    this.setData({ type })
   },
 
   onContentInput(e) {
@@ -19,7 +20,6 @@ Page({
 
   async onSubmit() {
     if (!this.data.content || !this.data.wechat) {
-      wx.showToast({ title: '请填写完整信息', icon: 'none' })
       return
     }
 
@@ -34,7 +34,24 @@ Page({
       }
     })
 
-    wx.showToast({ title: '发布成功' })
-    wx.navigateBack()
+    wx.showToast({ 
+      title: '发布成功',
+      icon: 'success'
+    })
+    
+    setTimeout(() => {
+      wx.switchTab({
+        url: '/pages/index/index'
+      })
+    }, 1500)
+  },
+
+  onShow() {
+    if (typeof this.getTabBar === 'function' &&
+      this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 1
+      })
+    }
   }
 }) 

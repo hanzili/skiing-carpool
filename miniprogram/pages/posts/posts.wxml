@@ -1,22 +1,41 @@
 <!--pages/posts/posts.wxml-->
 <view class="container">
+  <view class="header">
+    <view class="type-tag {{type === 'needCar' ? 'people' : 'car'}}">
+      {{type === 'needCar' ? '人找车' : '车找人'}}
+    </view>
+  </view>
+
   <view class="post-list">
-    <view 
-      wx:for="{{posts}}" 
-      wx:key="_id"
-      class="post-item"
-      bindtap="onPostTap"
-      data-id="{{item._id}}"
-    >
+    <view wx:for="{{posts}}" wx:key="_id" class="post-card">
+      <view class="post-header">
+        <text class="time">{{item.createTime}}</text>
+        <view class="status-tag {{item.status === 'active' ? 'active' : 'completed'}}">
+          {{item.status === 'active' ? '寻找中' : '已完成'}}
+        </view>
+      </view>
+      
       <view class="post-content">{{item.content}}</view>
-      <view class="post-info">
-        <text class="post-time">{{item.createTime}}</text>
-        <text class="post-status">{{item.status === 'active' ? '寻找中' : '已完成'}}</text>
+      
+      <view class="post-footer">
+        <button class="contact-btn" 
+                data-wechat="{{item.wechat}}"
+                bindtap="showWechat">
+          查看微信号
+        </button>
       </view>
     </view>
   </view>
 
-  <view wx:if="{{posts.length === 0}}" class="empty-tip">
-    暂无相关信息
+  <!-- 微信号弹窗 -->
+  <view class="modal" wx:if="{{showWechatModal}}">
+    <view class="modal-content">
+      <view class="modal-header">
+        <text>微信号</text>
+        <view class="close" bindtap="hideWechat">×</view>
+      </view>
+      <view class="wechat-number">{{currentWechat}}</view>
+      <button class="copy-btn" bindtap="copyWechat">复制微信号</button>
+    </view>
   </view>
 </view>

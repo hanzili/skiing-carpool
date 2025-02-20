@@ -1,56 +1,59 @@
 <view class="container">
-  <!-- 添加调试信息 -->
-  <view class="debug-info" style="font-size: 24rpx; color: #666; margin-bottom: 20rpx;">
-    共有 {{posts.length}} 条记录
-  </view>
-  
-  <view class="post-list">
-    <view 
-      wx:for="{{posts}}" 
-      wx:key="_id"
-      class="post-item"
-    >
-      <view class="post-content">{{item.content}}</view>
-      <view class="post-info">
-        <text class="post-time">{{item.createTime}}</text>
-        <text class="post-type">{{item.type === 'needCar' ? '人找车' : '车找人'}}</text>
-      </view>
-      <view class="post-actions">
-        <button 
-          class="btn-edit"
-          size="mini"
-          bindtap="onEditPost"
-          data-id="{{item._id}}"
-          data-content="{{item.content}}"
-          data-wechat="{{item.wechat}}"
-          data-type="{{item.type}}"
-        >
-          编辑
-        </button>
-        <button 
-          class="btn-status {{item.status === 'completed' ? 'btn-completed' : ''}}"
-          size="mini"
-          bindtap="onStatusChange"
-          data-id="{{item._id}}"
-        >
-          {{item.status === 'active' ? '标记完成' : '重新激活'}}
-        </button>
-        <button 
-          class="btn-delete"
-          size="mini"
-          type="warn"
-          bindtap="onDeletePost"
-          data-id="{{item._id}}"
-        >
-          删除
-        </button>
-      </view>
-    </view>
+  <!-- Add loading view -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading"></view>
   </view>
 
-  <view wx:if="{{posts.length === 0}}" class="empty-tip">
-    暂无发布信息
-  </view>
+  <!-- Only show content when not loading -->
+  <block wx:else>
+    <view class="post-list">
+      <view 
+        wx:for="{{posts}}" 
+        wx:key="_id"
+        class="post-item"
+      >
+        <view class="post-content">{{item.content}}</view>
+        <view class="post-info">
+          <text class="post-time">{{item.createTime}}</text>
+          <text class="post-type">{{item.type === 'needCar' ? '人找车' : '车找人'}}</text>
+        </view>
+        <view class="post-actions">
+          <button 
+            class="btn-edit"
+            size="mini"
+            bindtap="onEditPost"
+            data-id="{{item._id}}"
+            data-content="{{item.content}}"
+            data-wechat="{{item.wechat}}"
+            data-type="{{item.type}}"
+          >
+            编辑
+          </button>
+          <button 
+            class="btn-status {{item.status === 'completed' ? 'btn-completed' : ''}}"
+            size="mini"
+            bindtap="onStatusChange"
+            data-id="{{item._id}}"
+          >
+            {{item.status === 'active' ? '完成行程' : '重新发布'}}
+          </button>
+          <button 
+            class="btn-delete"
+            size="mini"
+            type="warn"
+            bindtap="onDeletePost"
+            data-id="{{item._id}}"
+          >
+            删除
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{posts.length === 0}}" class="empty-tip">
+      暂无发布信息
+    </view>
+  </block>
 
   <!-- 编辑弹窗 -->
   <view class="edit-modal" wx:if="{{showEditModal}}">
