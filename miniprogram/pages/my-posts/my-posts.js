@@ -3,6 +3,9 @@ Page({
     posts: [],
     showEditModal: false,
     isLoading: true,
+    updatingPostId: null,
+    deletingPostId: null,
+    isSubmittingEdit: false,
     editingPost: {
       id: '',
       content: '',
@@ -42,12 +45,6 @@ Page({
       .orderBy('createTime', 'desc')
       .get()
 
-    console.log('My posts:', posts.data)
-    
-    if (posts.data.length === 0) {
-      console.log('No posts found for current user')
-    }
-
     const formattedPosts = posts.data.map(post => ({
       _id: post._id,
       content: post.content,
@@ -70,22 +67,38 @@ Page({
 
   async onStatusChange(e) {
     const { id } = e.currentTarget.dataset
-    const post = this.data.posts.find(p => p._id === id)
-    const newStatus = post.status === 'active' ? 'completed' : 'active'
+    this.setData({ updatingPostId: id })
+    
+    try {
+      const post = this.data.posts.find(p => p._id === id)
+      const newStatus = post.status === 'active' ? 'completed' : 'active'
 
-    const db = wx.cloud.database()
-    await db.collection('carpools').doc(id).update({
-      data: {
-        status: newStatus
-      }
-    })
+      const db = wx.cloud.database()
+      await db.collection('carpools').doc(id).update({
+        data: { status: newStatus }
+      })
 
-    wx.showToast({
-      title: newStatus === 'active' ? '已重新激活' : '已完成',
-      icon: 'success'
-    })
+      const updatedPosts = this.data.posts.map(post => {
+        if (post._id === id) {
+          return { ...post, status: newStatus }
+        }
+        return post
+      })
 
-    this.loadMyPosts()
+      this.setData({ posts: updatedPosts })
+
+      wx.showToast({
+        title: newStatus === 'active' ? '已重新发布' : '已完成',
+        icon: 'success'
+      })
+    } catch (error) {
+      wx.showToast({
+        title: '操作失败',
+        icon: 'error'
+      })
+    } finally {
+      this.setData({ updatingPostId: null })
+    }
   },
 
   async onDeletePost(e) {
@@ -96,15 +109,27 @@ Page({
       content: '确定要删除这条信息吗？',
       success: async (res) => {
         if (res.confirm) {
-          const db = wx.cloud.database()
-          await db.collection('carpools').doc(id).remove()
+          this.setData({ deletingPostId: id })
           
-          wx.showToast({
-            title: '删除成功',
-            icon: 'success'
-          })
-          
-          this.loadMyPosts()
+          try {
+            const db = wx.cloud.database()
+            await db.collection('carpools').doc(id).remove()
+            
+            const updatedPosts = this.data.posts.filter(post => post._id !== id)
+            this.setData({ posts: updatedPosts })
+            
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            })
+          } catch (error) {
+            wx.showToast({
+              title: '删除失败',
+              icon: 'error'
+            })
+          } finally {
+            this.setData({ deletingPostId: null })
+          }
         }
       }
     })
@@ -141,21 +166,38 @@ Page({
       return
     }
 
-    const db = wx.cloud.database()
-    await db.collection('carpools').doc(id).update({
-      data: {
-        content,
-        wechat
-      }
-    })
+    this.setData({ isSubmittingEdit: true })
 
-    wx.showToast({ 
-      title: '更新成功', 
-      icon: 'success' 
-    })
+    try {
+      const db = wx.cloud.database()
+      await db.collection('carpools').doc(id).update({
+        data: { content, wechat }
+      })
 
-    this.setData({ showEditModal: false })
-    this.loadMyPosts()
+      const updatedPosts = this.data.posts.map(post => {
+        if (post._id === id) {
+          return { ...post, content, wechat }
+        }
+        return post
+      })
+
+      this.setData({ 
+        posts: updatedPosts,
+        showEditModal: false 
+      })
+
+      wx.showToast({ 
+        title: '更新成功', 
+        icon: 'success' 
+      })
+    } catch (error) {
+      wx.showToast({
+        title: '更新失败',
+        icon: 'error'
+      })
+    } finally {
+      this.setData({ isSubmittingEdit: false })
+    }
   },
 
   onEditCancel() {

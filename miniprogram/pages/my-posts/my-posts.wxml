@@ -26,6 +26,7 @@
             data-content="{{item.content}}"
             data-wechat="{{item.wechat}}"
             data-type="{{item.type}}"
+            disabled="{{updatingPostId === item._id || deletingPostId === item._id}}"
           >
             编辑
           </button>
@@ -34,6 +35,8 @@
             size="mini"
             bindtap="onStatusChange"
             data-id="{{item._id}}"
+            loading="{{updatingPostId === item._id}}"
+            disabled="{{updatingPostId === item._id || deletingPostId === item._id}}"
           >
             {{item.status === 'active' ? '完成行程' : '重新发布'}}
           </button>
@@ -43,6 +46,8 @@
             type="warn"
             bindtap="onDeletePost"
             data-id="{{item._id}}"
+            loading="{{deletingPostId === item._id}}"
+            disabled="{{updatingPostId === item._id || deletingPostId === item._id}}"
           >
             删除
           </button>
@@ -86,7 +91,12 @@
 
       <view class="modal-footer">
         <view class="modal-btn" bindtap="onEditCancel">取消</view>
-        <view class="modal-btn modal-btn-primary" bindtap="onEditSubmit">保存</view>
+        <view 
+          class="modal-btn modal-btn-primary {{isSubmittingEdit ? 'disabled' : ''}}" 
+          bindtap="{{!isSubmittingEdit ? 'onEditSubmit' : ''}}"
+        >
+          {{isSubmittingEdit ? '保存中...' : '保存'}}
+        </view>
       </view>
     </view>
   </view>
