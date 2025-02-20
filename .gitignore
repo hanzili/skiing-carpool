@@ -1,1 +1,4 @@
 node_modules/
+
+# Configuration
+miniprogram/config/env.js
