@@ -10,8 +10,12 @@ Page({
       id: '',
       content: '',
       wechat: '',
-      type: ''
-    }
+      type: '',
+      departureTime: '',
+      number_of_people: 1,
+      peopleIndex: 0
+    },
+    peopleRange: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   },
 
   onShow() {
@@ -42,22 +46,49 @@ Page({
       .where({
         _openid: app.globalData.openid
       })
-      .orderBy('createTime', 'desc')
+      .orderBy('departure_time', 'desc')
       .get()
 
-    const formattedPosts = posts.data.map(post => ({
-      _id: post._id,
-      content: post.content,
-      type: post.type,
-      wechat: post.wechat,
-      status: post.status,
-      createTime: new Date(post.createTime).toLocaleString('zh-CN', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }))
+    console.log(posts.data) // Log the raw data to check the departure_time
+
+    // Get current time in Montreal
+    const now = new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })
+    const nowDate = new Date(now)
+
+    const formattedPosts = posts.data.map(post => {
+      const departureDate = new Date(post.departure_time + 'T00:00:00') // Local time
+      
+      // Format the departure time in Montreal time
+      const options = { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        timeZone: 'America/Toronto' // Montreal time zone
+      }
+      const formattedDepartureTime = departureDate.toLocaleDateString('en-CA', options)
+      
+      // Check if the post is expired
+      const isExpired = departureDate < nowDate
+
+      return {
+        _id: post._id,
+        content: post.content,
+        type: post.type,
+        wechat: post.wechat,
+        status: post.status,
+        departureTime: formattedDepartureTime,
+        number_of_people: post.number_of_people || 1,
+        share_fare: post.share_fare || false,
+        isExpired: isExpired,
+        createTime: new Date(post.createTime).toLocaleString('zh-CN', {
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Toronto' // Montreal time zone
+        })
+      }
+    })
     
     this.setData({ 
       posts: formattedPosts,
@@ -136,10 +167,18 @@ Page({
   },
 
   onEditPost(e) {
-    const { id, content, wechat, type } = e.currentTarget.dataset
+    const { id, content, wechat, type, departureTime, number_of_people } = e.currentTarget.dataset
     this.setData({
       showEditModal: true,
-      editingPost: { id, content, wechat, type }
+      editingPost: { 
+        id, 
+        content, 
+        wechat, 
+        type, 
+        departureTime: departureTime.split(' ')[0],
+        number_of_people: number_of_people || 1,
+        peopleIndex: this.data.peopleRange.indexOf(number_of_people ? number_of_people : 1)
+      }
     })
   },
 
@@ -155,10 +194,23 @@ Page({
     })
   },
 
+  onEditDepartureTimeChange(e) {
+    this.setData({
+      'editingPost.departureTime': e.detail.value
+    })
+  },
+
+  onEditPeopleChange(e) {
+    this.setData({
+      'editingPost.peopleIndex': parseInt(e.detail.value),
+      'editingPost.number_of_people': this.data.peopleRange[parseInt(e.detail.value)]
+    })
+  },
+
   async onEditSubmit() {
-    const { id, content, wechat } = this.data.editingPost
+    const { id, content, wechat, departureTime, number_of_people } = this.data.editingPost
     
-    if (!content || !wechat) {
+    if (!content || !wechat || !departureTime) {
       wx.showToast({ 
         title: '请填写完整信息', 
         icon: 'none' 
@@ -171,12 +223,23 @@ Page({
     try {
       const db = wx.cloud.database()
       await db.collection('carpools').doc(id).update({
-        data: { content, wechat }
+        data: { 
+          content, 
+          wechat,
+          departure_time: departureTime,
+          number_of_people: parseInt(number_of_people)
+        }
       })
 
       const updatedPosts = this.data.posts.map(post => {
         if (post._id === id) {
-          return { ...post, content, wechat }
+          return { 
+            ...post, 
+            content, 
+            wechat,
+            departureTime: departureTime,
+            number_of_people
+          }
         }
         return post
       })

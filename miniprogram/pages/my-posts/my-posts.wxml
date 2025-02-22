@@ -12,11 +12,25 @@
         wx:key="_id"
         class="post-item"
       >
-        <view class="post-content">{{item.content}}</view>
-        <view class="post-info">
-          <text class="post-time">{{item.createTime}}</text>
+        <!-- 第一行：类型和状态 -->
+        <view class="post-header">
           <text class="post-type">{{item.type === 'needCar' ? '人找车' : '车找人'}}</text>
+          <text class="post-status {{item.status}} {{item.isExpired ? 'expired' : ''}}">
+            {{item.status === 'active' ? (item.isExpired ? '已过期' : '进行中') : '已完成'}}
+          </text>
         </view>
+
+        <!-- 第二行：出发时间和内容 -->
+        <view class="departure-time">出发时间：{{item.departureTime}}</view>
+        <view class="post-content">{{item.content}}</view>
+
+        <!-- 第三行：人数和车费 -->
+        <view class="trip-info">
+          <text class="people-count">人数：{{item.number_of_people}}人</text>
+          <text class="fare-info">{{item.share_fare ? '需分摊车费' : '不分摊车费'}}</text>
+        </view>
+
+        <!-- 操作按钮 -->
         <view class="post-actions">
           <button 
             class="btn-edit"
@@ -26,7 +40,9 @@
             data-content="{{item.content}}"
             data-wechat="{{item.wechat}}"
             data-type="{{item.type}}"
-            disabled="{{updatingPostId === item._id || deletingPostId === item._id}}"
+            data-departure-time="{{item.departureTime}}"
+            data-number-of-people="{{item.number_of_people}}"
+            disabled="{{updatingPostId === item._id}}"
           >
             编辑
           </button>
@@ -36,20 +52,9 @@
             bindtap="onStatusChange"
             data-id="{{item._id}}"
             loading="{{updatingPostId === item._id}}"
-            disabled="{{updatingPostId === item._id || deletingPostId === item._id}}"
+            disabled="{{updatingPostId === item._id}}"
           >
             {{item.status === 'active' ? '完成行程' : '重新发布'}}
-          </button>
-          <button 
-            class="btn-delete"
-            size="mini"
-            type="warn"
-            bindtap="onDeletePost"
-            data-id="{{item._id}}"
-            loading="{{deletingPostId === item._id}}"
-            disabled="{{updatingPostId === item._id || deletingPostId === item._id}}"
-          >
-            删除
           </button>
         </view>
       </view>
@@ -66,26 +71,55 @@
       <view class="edit-header">编辑信息</view>
       
       <view class="edit-form">
+        <!-- 出发时间 -->
+        <view class="form-item">
+          <picker mode="date" value="{{editingPost.departureTime}}" bindchange="onEditDepartureTimeChange">
+            <view class="picker-wrapper">
+              <text class="label">出发时间</text>
+              <view class="picker-value {{!editingPost.departureTime ? 'placeholder' : ''}}">
+                {{editingPost.departureTime || '请选择出发日期'}}
+              </view>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 人数 -->
+        <view class="form-item">
+          <picker mode="selector" range="{{peopleRange}}" value="{{editingPost.peopleIndex}}" bindchange="onEditPeopleChange">
+            <view class="picker-wrapper">
+              <text class="label">人数</text>
+              <view class="picker-value {{editingPost.peopleIndex === -1 ? 'placeholder' : ''}}">
+                {{editingPost.peopleIndex === -1 ? '请选择人数' : editingPost.number_of_people + '人'}}
+              </view>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 拼车信息 -->
         <view class="form-item">
           <text class="label">拼车信息</text>
           <textarea 
             class="edit-textarea"
             value="{{editingPost.content}}"
-            placeholder="请输入拼车信息"
+            placeholder="请输入出发地和目的地"
             bindinput="onEditContentInput"
-            maxlength="200"
+            maxlength="150"
           />
+          <view class="word-limit">{{editingPost.content.length}}/150</view>
         </view>
 
+        <!-- 微信号 -->
         <view class="form-item">
-          <text class="label">微信号</text>
-          <input 
-            class="edit-input"
-            value="{{editingPost.wechat}}"
-            placeholder="请输入微信号"
-            bindinput="onEditWechatInput"
-            maxlength="30"
-          />
+          <view class="wechat-input-wrapper">
+            <image class="wechat-icon" src="/images/wechat-color.svg" />
+            <input 
+              class="wechat-field"
+              value="{{editingPost.wechat}}"
+              placeholder="请输入微信号"
+              bindinput="onEditWechatInput"
+              maxlength="30"
+            />
+          </view>
         </view>
       </view>
 

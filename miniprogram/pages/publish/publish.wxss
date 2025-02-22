@@ -3,9 +3,10 @@
   min-height: 100vh;
   background: #f7f8fa;
   padding: 32rpx;
+  padding-bottom: 180rpx;
   display: flex;
   flex-direction: column;
-  gap: 32rpx;
+  gap: 24rpx;
   box-sizing: border-box;
 }
 
@@ -84,13 +85,54 @@
   overflow: hidden;
 }
 
+.picker-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.picker-value {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.picker-value.placeholder {
+  color: #999;
+}
+
+.fare-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radio-group {
+  display: flex;
+  gap: 32rpx;
+}
+
+.radio-label {
+  font-size: 28rpx;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
 .message-input {
   width: 100%;
-  height: 240rpx;
+  height: 180rpx;
   font-size: 28rpx;
   line-height: 1.6;
+  padding: 12rpx;
   box-sizing: border-box;
-  padding-bottom: 48rpx;
+  border: none;
+  outline: none;
 }
 
 .word-limit {
@@ -114,19 +156,23 @@
 .wechat-icon {
   width: 36rpx;
   height: 36rpx;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .wechat-field {
   flex: 1;
   font-size: 28rpx;
-  height: 44rpx;
+  height: 60rpx;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  background: transparent;
 }
 
 .publish-btn {
   width: 100%;
   height: 88rpx;
-  background: #4080ff;
+  background: #007aff;
   color: white;
   font-size: 32rpx;
   font-weight: 500;
@@ -135,6 +181,8 @@
   text-align: center;
   border: none;
   position: relative;
+  margin-top: 10rpx;
+  margin-bottom: 10rpx;
 }
 
 .publish-btn.disabled {
@@ -149,4 +197,13 @@
 
 .placeholder {
   color: #999;
+}
+
+.number-field {
+  width: 100%;
+  height: 44rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+  padding: 0 8rpx;
 }

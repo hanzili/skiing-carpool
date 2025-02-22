@@ -20,21 +20,62 @@
   </view>
 
   <view class="form">
+    <!-- 出发时间选择器 -->
+    <view class="form-item">
+      <picker mode="date" value="{{departureTime}}" start="{{minDate}}" bindchange="onDepartureTimeChange">
+        <view class="picker-wrapper">
+          <text class="label">出发时间</text>
+          <view class="picker-value {{!departureTime ? 'placeholder' : ''}}">
+            {{departureTime || '请选择出发日期'}}
+          </view>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 人数选择器 -->
+    <view class="form-item">
+      <picker mode="selector" range="{{peopleRange}}" value="{{peopleIndex}}" bindchange="onPeopleChange">
+        <view class="picker-wrapper">
+          <text class="label">人数</text>
+          <view class="picker-value {{peopleIndex === -1 ? 'placeholder' : ''}}">
+            {{peopleIndex === -1 ? '请选择人数' : peopleRange[peopleIndex] + '人'}}
+          </view>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 分摊车费选项 -->
+    <view class="form-item" wx:if="{{type === 'needPeople'}}">
+      <view class="fare-section">
+        <text class="label">是否分摊车费</text>
+        <radio-group class="radio-group" bindchange="onShareFareChange">
+          <label class="radio-label">
+            <radio value="true" checked="{{shareFare === 'true'}}" />分摊
+          </label>
+          <label class="radio-label">
+            <radio value="false" checked="{{shareFare === 'false'}}" />不分摊
+          </label>
+        </radio-group>
+      </view>
+    </view>
+
+    <!-- 拼车信息输入框 -->
     <view class="form-item">
       <textarea class="message-input" 
-                placeholder="请输入拼车信息：\n• 出发地点和目的地\n• 出发时间\n• 人数要求\n• 其他说明" 
+                placeholder="请输入出发地和目的地" 
                 placeholder-class="placeholder"
                 value="{{content}}"
                 bindinput="onContentInput"
-                maxlength="200" />
-      <view class="word-limit">{{content.length}}/200</view>
+                maxlength="150" />
+      <view class="word-limit">{{content.length}}/150</view>
     </view>
 
+    <!-- 微信号输入框 -->
     <view class="form-item">
       <view class="wechat-input-wrapper">
-        <image class="wechat-icon" src="/images/wechat-gray.svg" />
+        <image class="wechat-icon" src="/images/wechat-color.svg" />
         <input class="wechat-field"
-               placeholder="请输入微信号，方便联系" 
+               placeholder="请输入微信号" 
                placeholder-class="placeholder"
                value="{{wechat}}"
                bindinput="onWechatInput" />
@@ -42,9 +83,9 @@
     </view>
   </view>
 
-  <button class="publish-btn {{(!content || !wechat) ? 'disabled' : ''}}" 
+  <button class="publish-btn {{(!isFormValid) ? 'disabled' : ''}}" 
           bindtap="onSubmit"
-          disabled="{{!content || !wechat}}">
+          disabled="{{!isFormValid}}">
     发布
   </button>
 </view> 

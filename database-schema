@@ -4,4 +4,7 @@ carpools: {
   wechat: String,      // 微信号
   status: String,      // active 或 completed
   createTime: Date,    // 创建时间
+  departure_time: Date,  // 出发时间
+  share_fare: Boolean,   // 是否分担车费
+  number_of_people: Number,  // 人数
 } 
