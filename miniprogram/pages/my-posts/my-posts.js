@@ -13,7 +13,8 @@ Page({
       type: '',
       departureTime: '',
       number_of_people: 1,
-      peopleIndex: 0
+      peopleIndex: 0,
+      share_fare: false
     },
     peopleRange: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   },
@@ -49,7 +50,7 @@ Page({
       .orderBy('departure_time', 'desc')
       .get()
 
-    console.log(posts.data) // Log the raw data to check the departure_time
+    console.log('Raw posts from database:', posts.data) // Add this log
 
     // Get current time in Montreal
     const now = new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })
@@ -70,7 +71,7 @@ Page({
       // Check if the post is expired
       const isExpired = departureDate < nowDate
 
-      return {
+      const formatted = {
         _id: post._id,
         content: post.content,
         type: post.type,
@@ -88,12 +89,17 @@ Page({
           timeZone: 'America/Toronto' // Montreal time zone
         })
       }
+      
+      console.log('Formatted post:', formatted) // Add this log
+      return formatted
     })
     
     this.setData({ 
       posts: formattedPosts,
       isLoading: false 
     })
+
+    console.log('Final posts in data:', this.data.posts) // Add this log
   },
 
   async onStatusChange(e) {
@@ -167,7 +173,7 @@ Page({
   },
 
   onEditPost(e) {
-    const { id, content, wechat, type, departureTime, number_of_people } = e.currentTarget.dataset
+    const { id, content, wechat, type, departureTime, number_of_people, share_fare } = e.currentTarget.dataset
     this.setData({
       showEditModal: true,
       editingPost: { 
@@ -177,7 +183,8 @@ Page({
         type, 
         departureTime: departureTime.split(' ')[0],
         number_of_people: number_of_people || 1,
-        peopleIndex: this.data.peopleRange.indexOf(number_of_people ? number_of_people : 1)
+        peopleIndex: this.data.peopleRange.indexOf(number_of_people ? number_of_people : 1),
+        share_fare: share_fare || false
       }
     })
   },
@@ -207,8 +214,14 @@ Page({
     })
   },
 
+  onShareFareChange(e) {
+    this.setData({
+      'editingPost.share_fare': e.detail.value === 'true'
+    })
+  },
+
   async onEditSubmit() {
-    const { id, content, wechat, departureTime, number_of_people } = this.data.editingPost
+    const { id, content, wechat, departureTime, number_of_people, type, share_fare } = this.data.editingPost
     
     if (!content || !wechat || !departureTime) {
       wx.showToast({ 
@@ -222,13 +235,20 @@ Page({
 
     try {
       const db = wx.cloud.database()
+      const updateData = { 
+        content, 
+        wechat,
+        departure_time: departureTime,
+        number_of_people: parseInt(number_of_people)
+      }
+      
+      // 只有车找人类型才更新 share_fare
+      if (type === 'needPeople') {
+        updateData.share_fare = share_fare
+      }
+
       await db.collection('carpools').doc(id).update({
-        data: { 
-          content, 
-          wechat,
-          departure_time: departureTime,
-          number_of_people: parseInt(number_of_people)
-        }
+        data: updateData
       })
 
       const updatedPosts = this.data.posts.map(post => {
@@ -238,7 +258,8 @@ Page({
             content, 
             wechat,
             departureTime: departureTime,
-            number_of_people
+            number_of_people,
+            share_fare: type === 'needPeople' ? share_fare : post.share_fare
           }
         }
         return post

@@ -107,14 +107,19 @@ button[size="mini"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
+  padding-bottom: 100rpx;
 }
 
 .edit-content {
   background: #fff;
   width: 680rpx;
+  max-height: 85vh;
   border-radius: 24rpx;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 100rpx;
 }
 
 .edit-header {
@@ -128,6 +133,8 @@ button[size="mini"] {
 
 .edit-form {
   padding: 32rpx;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .form-item {
@@ -278,21 +285,20 @@ button[size="mini"] {
   padding: 8rpx 16rpx;
   border-radius: 6rpx;
   line-height: 1;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-status.active {
-  background: #e6f3ff;
   color: #0052a6;
 }
 
 .post-status.completed {
-  background: #e6e6e6;
   color: #666666;
 }
 
 .post-status.expired {
-  background: #fff2f0;
   color: #ff4d4f;
 }
 
@@ -314,4 +320,21 @@ button[size="mini"] {
 /* Update existing button styles */
 .btn-status, .btn-edit {
   min-width: 160rpx;
+}
+
+.share-fare-radio {
+  display: flex;
+  gap: 32rpx;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.radio-label radio {
+  margin-right: 8rpx;
+  transform: scale(0.8);
 } 

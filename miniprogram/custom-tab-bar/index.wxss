@@ -28,7 +28,7 @@
   margin-bottom: 6rpx;
 }
 
-.icon-wrapper image {
+.icon-wrapper .icon-image {
   width: 44rpx;
   height: 44rpx;
 }
@@ -58,7 +58,7 @@
   box-shadow: 0 4rpx 12rpx rgba(64, 128, 255, 0.2);
 }
 
-.tab-bar-item.special .icon-wrapper image {
+.tab-bar-item.special .icon-wrapper .icon-image {
   width: 56rpx;
   height: 56rpx;
 }

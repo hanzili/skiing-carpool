@@ -1,7 +1,7 @@
 /* pages/posts/posts.wxss */
 .container {
   min-height: 100vh;
-  background: #f0f7ff;
+  background: #e3f2fd; /* Light blue background */
   padding: 24rpx;
 }
 
@@ -12,52 +12,52 @@
 }
 
 .type-tag {
-  padding: 12rpx 32rpx;
-  border-radius: 32rpx;
-  font-size: 28rpx;
-  font-weight: 500;
+  padding: 16rpx 36rpx;
+  border-radius: 36rpx;
+  font-size: 30rpx;
+  font-weight: 600;
 }
 
 .type-tag.people {
-  background: rgba(64, 128, 255, 0.1);
-  color: #4080ff;
+  background: rgba(33, 150, 243, 0.1); /* Light blue */
+  color: #2196f3; /* Blue */
 }
 
 .type-tag.car {
-  background: rgba(75, 192, 128, 0.1);
-  color: #4bc080;
+  background: rgba(3, 169, 244, 0.1); /* Light blue */
+  color: #03a9f4; /* Blue */
 }
 
 .post-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 28rpx;
 }
 
 .post-card {
   background: white;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  border-radius: 28rpx;
+  padding: 36rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .post-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 28rpx;
 }
 
 .time {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 26rpx;
+  color: #666;
 }
 
 .post-content {
-  font-size: 32rpx;
-  color: #333;
-  line-height: 1.6;
-  margin-bottom: 32rpx;
+  font-size: 34rpx;
+  color: #444;
+  line-height: 1.8;
+  margin-bottom: 36rpx;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
@@ -68,33 +68,38 @@
 }
 
 .status-tag {
-  padding: 8rpx 24rpx;
-  border-radius: 24rpx;
-  font-size: 24rpx;
+  padding: 10rpx 28rpx;
+  border-radius: 28rpx;
+  font-size: 26rpx;
 }
 
 .status-tag.active {
-  background: rgba(64, 128, 255, 0.1);
-  color: #4080ff;
+  background: rgba(33, 150, 243, 0.1); /* Light blue */
+  color: #2196f3; /* Blue */
 }
 
 .status-tag.completed {
-  background: rgba(153, 153, 153, 0.1);
-  color: #999;
+  background: rgba(158, 158, 158, 0.1);
+  color: #9e9e9e;
 }
 
 .contact-btn {
-  min-width: 180rpx;
-  height: 72rpx;
-  background: #4080ff;
+  min-width: 200rpx;
+  height: 80rpx;
+  background: #2196f3; /* Blue */
   color: white;
-  font-size: 28rpx;
-  border-radius: 36rpx;
-  padding: 0 40rpx;
+  font-size: 30rpx;
+  border-radius: 40rpx;
+  padding: 0 44rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
+  transition: background 0.3s;
+}
+
+.contact-btn:hover {
+  background: #1976d2; /* Darker blue on hover */
 }
 
 /* 弹窗样式 */
@@ -104,7 +109,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,45 +117,60 @@
 }
 
 .modal-content {
-  width: 560rpx;
+  width: 600rpx;
   background: white;
-  border-radius: 24rpx;
-  padding: 32rpx;
+  border-radius: 28rpx;
+  padding: 36rpx;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
-  font-size: 32rpx;
-  font-weight: 500;
+  margin-bottom: 28rpx;
+  font-size: 34rpx;
+  font-weight: 600;
 }
 
 .close {
-  font-size: 40rpx;
-  color: #999;
-  padding: 8rpx;
+  font-size: 42rpx;
+  color: #666;
+  padding: 10rpx;
 }
 
 .wechat-number {
   text-align: center;
-  font-size: 36rpx;
-  color: #333;
-  margin: 32rpx 0;
+  font-size: 38rpx;
+  color: #444;
+  margin: 36rpx 0;
 }
 
 .copy-btn {
-  background: #4080ff;
+  background: #2196f3; /* Blue */
   color: white;
   border: none;
-  border-radius: 32rpx;
-  font-size: 28rpx;
-  margin-top: 24rpx;
+  border-radius: 36rpx;
+  font-size: 30rpx;
+  margin-top: 28rpx;
 }
 
 .empty-tip {
   text-align: center;
-  color: #999;
-  padding: 40rpx;
+  color: #9e9e9e;
+  padding: 44rpx;
+}
+
+.post-info {
+  display: flex;
+  gap: 16rpx; /* Space between tags */
+  margin-bottom: 20rpx; /* Space below the tags */
+}
+
+.tag {
+  background: rgba(33, 150, 243, 0.1); /* Light blue background */
+  color: #2196f3; /* Blue text */
+  padding: 8rpx 16rpx; /* Padding for the tag */
+  border-radius: 20rpx; /* Rounded corners */
+  font-size: 26rpx; /* Font size for the tag */
+  font-weight: 500; /* Font weight for the tag */
 }

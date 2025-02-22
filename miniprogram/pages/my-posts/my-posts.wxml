@@ -27,7 +27,7 @@
         <!-- 第三行：人数和车费 -->
         <view class="trip-info">
           <text class="people-count">人数：{{item.number_of_people}}人</text>
-          <text class="fare-info">{{item.share_fare ? '需分摊车费' : '不分摊车费'}}</text>
+          <text class="fare-info" wx:if="{{item.type === 'needPeople'}}">{{item.share_fare ? '需分摊车费' : '不分摊车费'}}</text>
         </view>
 
         <!-- 操作按钮 -->
@@ -42,6 +42,7 @@
             data-type="{{item.type}}"
             data-departure-time="{{item.departureTime}}"
             data-number-of-people="{{item.number_of_people}}"
+            data-share-fare="{{item.share_fare}}"
             disabled="{{updatingPostId === item._id}}"
           >
             编辑
@@ -93,6 +94,19 @@
               </view>
             </view>
           </picker>
+        </view>
+
+        <!-- 只有车找人类型才显示分担车费选项 - 移到人数后面 -->
+        <view class="form-item" wx:if="{{editingPost.type === 'needPeople'}}">
+          <text class="label">车费分摊</text>
+          <radio-group class="share-fare-radio" bindchange="onShareFareChange">
+            <label class="radio-label">
+              <radio value="true" checked="{{editingPost.share_fare}}"/>需要分摊
+            </label>
+            <label class="radio-label">
+              <radio value="false" checked="{{!editingPost.share_fare}}"/>不需要分摊
+            </label>
+          </radio-group>
         </view>
 
         <!-- 拼车信息 -->

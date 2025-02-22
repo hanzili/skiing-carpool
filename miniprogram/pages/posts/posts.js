@@ -20,48 +20,33 @@ Page({
         status: 'active',  // 未完成的拼车
         _openid: _.exists(true) // 确保帖子有发布者
       })
-      .orderBy('createTime', 'desc')
+      .orderBy('departure_time', 'asc')
       .get()
     
-    // 格式化时间
+    // Format posts with Montreal time
     const formattedPosts = posts.data.map(post => ({
       _id: post._id,
       content: post.content,
       type: post.type,
       wechat: post.wechat,
       status: post.status,
-      createTime: new Date(post.createTime).toLocaleString('zh-CN', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      departure_time: post.departure_time.split('T')[0], // Just keep YYYY-MM-DD format
+      number_of_people: post.number_of_people,
+      share_fare: this.data.type === 'needPeople' ? post.share_fare : null
     }))
     
     this.setData({ posts: formattedPosts })
   },
 
-  showWechat(e) {
+  copyWechat(e) {
     const { wechat } = e.currentTarget.dataset
-    this.setData({
-      showWechatModal: true,
-      currentWechat: wechat
-    })
-  },
-
-  hideWechat() {
-    this.setData({ showWechatModal: false })
-  },
-
-  copyWechat() {
     wx.setClipboardData({
-      data: this.data.currentWechat,
+      data: wechat,
       success: () => {
         wx.showToast({
           title: '已复制微信号',
           icon: 'success'
         })
-        this.hideWechat()
       }
     })
   }

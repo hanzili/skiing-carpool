@@ -8,7 +8,7 @@
     bindtap="switchTab"
   >
     <view class="icon-wrapper {{selected === index ? 'selected' : ''}}">
-      <image src="{{selected === index ? item.selectedIconPath : item.iconPath}}"></image>
+      <image class="icon-image" src="{{selected === index ? item.selectedIconPath : item.iconPath}}"></image>
     </view>
     <view class="tab-text {{selected === index ? 'selected' : ''}}">
       {{item.text}}

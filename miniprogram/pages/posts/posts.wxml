@@ -9,19 +9,28 @@
   <view class="post-list">
     <view wx:for="{{posts}}" wx:key="_id" class="post-card">
       <view class="post-header">
-        <text class="time">{{item.createTime}}</text>
+        <text class="departure-time">{{item.departure_time}}</text>
         <view class="status-tag {{item.status === 'active' ? 'active' : 'completed'}}">
           {{item.status === 'active' ? '寻找中' : '已完成'}}
+        </view>
+      </view>
+      
+      <view class="post-info">
+        <view class="tag">
+          {{type === 'needCar' ? '需要' : '提供'}} {{item.number_of_people}} 车位
+        </view>
+        <view class="tag" wx:if="{{type === 'needPeople'}}">
+          {{item.share_fare ? '分担车费' : '不分担车费'}}
         </view>
       </view>
       
       <view class="post-content">{{item.content}}</view>
       
       <view class="post-footer">
-        <button class="contact-btn" 
+        <button class="copy-btn" 
                 data-wechat="{{item.wechat}}"
-                bindtap="showWechat">
-          查看微信号
+                bindtap="copyWechat">
+          复制微信号
         </button>
       </view>
     </view>
