@@ -1,91 +1,102 @@
 <view class="container">
-  <view class="header">
-    <view class="title">发布拼车</view>
-    <view class="subtitle">找到你的滑雪伙伴 ⛷️</view>
+  <!-- Loading indicator -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading"></view>
   </view>
 
-  <view class="type-tabs">
-    <view class="tab {{type === 'needCar' ? 'active' : ''}}" 
-          bindtap="onTypeChange" 
-          data-type="needCar">
-      <image class="tab-icon" src="/images/person.svg" />
-      <view class="tab-text">人找车</view>
-    </view>
-    <view class="tab {{type === 'needPeople' ? 'active' : ''}}" 
-          bindtap="onTypeChange" 
-          data-type="needPeople">
-      <image class="tab-icon" src="/images/car.svg" />
-      <view class="tab-text">车找人</view>
+  <!-- 拼车类型选择 -->
+  <view class="section">
+    <view class="section-label">您是想要：</view>
+    <view class="type-buttons">
+      <view class="type-btn {{type === 'needPeople' ? 'active' : ''}}" 
+            bindtap="switchType" 
+            data-type="needPeople">
+        车找人
+      </view>
+      <view class="type-btn {{type === 'needCar' ? 'active' : ''}}" 
+            bindtap="switchType" 
+            data-type="needCar">
+        人找车
+      </view>
     </view>
   </view>
-
-  <view class="form">
-    <!-- 出发时间选择器 -->
-    <view class="form-item">
-      <picker mode="date" value="{{departureTime}}" start="{{minDate}}" bindchange="onDepartureTimeChange">
-        <view class="picker-wrapper">
-          <text class="label">出发时间</text>
-          <view class="picker-value {{!departureTime ? 'placeholder' : ''}}">
-            {{departureTime || '请选择出发日期'}}
-          </view>
+  
+  <!-- 必填信息 -->
+  <view class="section">
+    <!-- 出发日期 -->
+    <view class="form-row">
+      <text class="row-label">出发日期</text>
+      <picker mode="date" value="{{departureDate}}" start="{{minDate}}" bindchange="onDateChange">
+        <view class="row-value">
+          <text class="{{departureDate ? 'selected-value' : 'placeholder'}}">{{departureDate || '请选择日期'}}</text>
+          <view class="chevron-right"></view>
         </view>
       </picker>
     </view>
-
-    <!-- 人数选择器 -->
-    <view class="form-item">
-      <picker mode="selector" range="{{peopleRange}}" value="{{peopleIndex}}" bindchange="onPeopleChange">
-        <view class="picker-wrapper">
-          <text class="label">人数</text>
-          <view class="picker-value {{peopleIndex === -1 ? 'placeholder' : ''}}">
-            {{peopleIndex === -1 ? '请选择人数' : peopleRange[peopleIndex] + '人'}}
-          </view>
-        </view>
-      </picker>
+    
+    <!-- 人数选择 -->
+    <view class="form-row">
+      <text class="row-label">{{type === 'needCar' ? '需要人数' : '可载人数'}}</text>
+      <view class="counter-controls">
+        <view class="counter-btn decrease" bindtap="decreasePeople">-</view>
+        <text class="counter-value">{{peopleChoices[peopleIndex]}}</text>
+        <view class="counter-btn increase" bindtap="increasePeople">+</view>
+      </view>
     </view>
 
     <!-- 分摊车费选项 -->
-    <view class="form-item" wx:if="{{type === 'needPeople'}}">
-      <view class="fare-section">
-        <text class="label">是否分摊车费</text>
-        <radio-group class="radio-group" bindchange="onShareFareChange">
-          <label class="radio-label">
-            <radio value="true" checked="{{shareFare === 'true'}}" />分摊
-          </label>
-          <label class="radio-label">
-            <radio value="false" checked="{{shareFare === 'false'}}" />不分摊
-          </label>
-        </radio-group>
-      </view>
-    </view>
-
-    <!-- 拼车信息输入框 -->
-    <view class="form-item">
-      <textarea class="message-input" 
-                placeholder="请输入出发地和目的地" 
-                placeholder-class="placeholder"
-                value="{{content}}"
-                bindinput="onContentInput"
-                maxlength="150" />
-      <view class="word-limit">{{content.length}}/150</view>
-    </view>
-
-    <!-- 微信号输入框 -->
-    <view class="form-item">
-      <view class="wechat-input-wrapper">
-        <image class="wechat-icon" src="/images/wechat-color.svg" />
-        <input class="wechat-field"
-               placeholder="请输入微信号" 
-               placeholder-class="placeholder"
-               value="{{wechat}}"
-               bindinput="onWechatInput" />
-      </view>
+    <view class="form-row" wx:if="{{type === 'needPeople'}}">
+      <text class="row-label">是否分摊车费</text>
+      <switch checked="{{shareFare}}" color="#4080ff" bindchange="toggleShareFare" />
     </view>
   </view>
 
-  <button class="publish-btn {{(!isFormValid) ? 'disabled' : ''}}" 
+  <!-- 可选信息 -->
+  <view class="section">
+    <view class="section-label">行程信息</view>
+    <textarea class="content-textarea" 
+              placeholder="在这里添加更多信息，如出发地点、目的地、具体时间、活动详情等..." 
+              placeholder-class="placeholder"
+              value="{{content}}"
+              bindinput="onContentInput"
+              maxlength="300"></textarea>
+    <view class="word-count">{{content.length}}/300</view>
+  </view>
+  
+  <!-- 联系方式 - 微信号 -->
+  <view class="section">
+    <view class="section-label">联系方式</view>
+    <input class="contact-input"
+          placeholder="请输入您的微信号"
+          placeholder-class="placeholder"
+          value="{{wechat}}"
+          bindinput="onWechatInput" />
+  </view>
+
+  <!-- 发布按钮 -->
+  <button class="submit-btn" 
           bindtap="onSubmit"
-          disabled="{{!isFormValid}}">
-    发布
+          disabled="{{isSubmitting}}">
+    {{isSubmitting ? '发布中...' : '发布'}}
   </button>
+</view>
+
+<!-- 登录弹窗 - 与 my-posts 页面保持一致 -->
+<view class="wechat-prompt" wx:if="{{showLoginModal}}">
+  <view class="wechat-prompt-content">
+    <view class="wechat-prompt-header">微信登录</view>
+    <view class="wechat-prompt-text">请授权获取微信信息，以便使用拼车功能</view>
+    
+    <button 
+      class="wechat-auth-btn" 
+      bindtap="handleLogin">
+      微信授权登录
+    </button>
+    
+    <button 
+      class="wechat-cancel-btn" 
+      bindtap="closeLoginModal">
+      取消
+    </button>
+  </view>
 </view> 

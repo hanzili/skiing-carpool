@@ -1,0 +1,101 @@
+<!-- components/post-item/post-item.wxml -->
+<view class="post-item {{isArchived ? 'archived-post' : ''}}">
+  <!-- 第一行：类型和状态 -->
+  <view class="post-header">
+    <view class="post-info">
+      <view class="type-badge {{post.type === 'needCar' ? 'people-badge' : 'car-badge'}}">
+        {{post.type === 'needCar' ? '人找车' : '车找人'}}
+      </view>
+      <!-- Show the date without trying to split it -->
+      <view class="post-date">{{post.departureDate}}</view>
+    </view>
+    
+    <!-- Status display with fixed layout -->
+    <view class="status-display">
+      <!-- Status text with fixed width -->
+      <text class="status-tag {{isArchived ? 'expired' : post.statusClass}}">{{isArchived ? '' : post.statusText}}</text>
+      
+      <!-- Toggle button -->
+      <view class="toggle-btn" bindtap="toggleExpand" data-id="{{post.id}}" wx:if="{{!isArchived}}">
+        <view class="chevron {{isThisPostExpanded ? 'up' : 'down'}}"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 座位更新选项 (仅对车找人类型且展开时显示) -->
+  <view class="seats-control" wx:if="{{post.type === 'needPeople' && isThisPostExpanded && isActive}}">
+    <view class="seats-title">更新剩余座位</view>
+    <view class="seats-buttons">
+      <view 
+        wx:for="{{possibleSeats}}" 
+        wx:for-item="seatCount" 
+        wx:key="*this"
+        class="seat-btn {{post.number_of_people === seatCount ? 'active' : ''}} {{updatingPostId === post.id ? 'disabled' : ''}}"
+        bindtap="updateSeats"
+        data-id="{{post.id}}"
+        data-seats="{{seatCount}}"
+      >
+        {{seatCount}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 状态更新选项 (仅对人找车类型且展开时显示) -->
+  <view class="status-control" wx:if="{{post.type === 'needCar' && isThisPostExpanded && isActive}}">
+    <view class="status-title">更新状态</view>
+    <view class="status-buttons">
+      <view 
+        class="status-btn {{post.status === 'active' || post.status === 'STILL_LOOKING' ? 'active' : ''}} {{updatingPostId === post.id ? 'disabled' : ''}}"
+        bindtap="updateStatus"
+        data-id="{{post.id}}"
+        data-status="active"
+      >
+        仍在寻找
+      </view>
+      <view 
+        class="status-btn {{post.status === 'found' || post.status === 'FOUND' ? 'active' : ''}} {{updatingPostId === post.id ? 'disabled' : ''}}"
+        bindtap="updateStatus"
+        data-id="{{post.id}}"
+        data-status="found"
+      >
+        已找到
+      </view>
+    </view>
+  </view>
+
+  <!-- 拼车内容 -->
+  <view class="post-content">{{post.content}}</view>
+
+  <!-- 底部操作栏 -->
+  <view class="post-footer">
+    <view class="post-time">{{post.createTime}}发布</view>
+    <view class="post-actions">
+      <button 
+        class="btn-edit btn-mini"
+        size="mini"
+        bindtap="onEditPost"
+        data-id="{{post.id}}"
+        data-content="{{post.content}}"
+        data-wechat="{{post.wechat}}"
+        data-type="{{post.type}}"
+        data-departure-time="{{post.departure_time}}"
+        data-number-of-people="{{post.number_of_people}}"
+        data-share-fare="{{post.share_fare}}"
+        disabled="{{updatingPostId === post.id}}"
+        wx:if="{{isActive}}"
+      >
+        编辑
+      </button>
+      <button 
+        class="btn-delete btn-mini"
+        size="mini"
+        bindtap="onDeletePost"
+        data-id="{{post.id}}"
+        loading="{{deletingPostId === post.id}}"
+        disabled="{{deletingPostId === post.id}}"
+      >
+        删除
+      </button>
+    </view>
+  </view>
+</view> 

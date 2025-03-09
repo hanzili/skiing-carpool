@@ -7,11 +7,11 @@
   </view>
 
   <view class="post-list">
-    <view wx:for="{{posts}}" wx:key="_id" class="post-card">
+    <view wx:for="{{posts}}" wx:key="id" class="post-card">
       <view class="post-header">
         <text class="departure-time">{{item.departure_time}}</text>
-        <view class="status-tag {{item.status === 'active' ? 'active' : 'completed'}}">
-          {{item.status === 'active' ? '寻找中' : '已完成'}}
+        <view class="status-tag active">
+          寻找中
         </view>
       </view>
       
@@ -34,6 +34,11 @@
         </button>
       </view>
     </view>
+  </view>
+
+  <!-- 无内容提示 -->
+  <view wx:if="{{posts.length === 0}}" class="empty-tip">
+    暂无符合条件的拼车信息
   </view>
 
   <!-- 微信号弹窗 -->

@@ -1,0 +1,89 @@
+<!-- components/edit-modal/edit-modal.wxml -->
+<view class="edit-modal" wx:if="{{showModal}}">
+  <view class="edit-content">
+    <view class="edit-header">
+      <text class="header-title">编辑拼车</text>
+      <view class="close-btn" bindtap="onClose">×</view>
+    </view>
+    
+    <scroll-view scroll-y class="edit-form">
+      <!-- Carpool Type Section (Read-only) -->
+      <view class="form-section">
+        <view class="section-title">拼车类型</view>
+        <view class="type-selector">
+          <view class="type-option {{localEditingPost.needPeople ? 'selected' : ''}} disabled">
+            车找人
+          </view>
+          <view class="type-option {{!localEditingPost.needPeople ? 'selected' : ''}} disabled">
+            人找车
+          </view>
+        </view>
+        <view class="section-hint">拼车类型无法修改</view>
+      </view>
+      
+      <!-- Departure Time Section -->
+      <view class="form-section">
+        <view class="section-title">出发日期</view>
+        <picker mode="date" value="{{localEditingPost.departureTime}}" 
+            start="{{minDate}}" end="2025-12-31"
+            bindchange="onEditDepartureTimeChange">
+          <view class="date-picker">
+            <text>{{localEditingPost.departureTime || '请选择出发日期'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+      
+      <!-- Number of People Section -->
+      <view class="form-section">
+        <view class="section-title">人数</view>
+        <view class="number-selector">
+          <view class="number-btn minus" bindtap="decreasePeople">-</view>
+          <view class="number-value">{{localEditingPost.numberOfPeople}}</view>
+          <view class="number-btn plus" bindtap="increasePeople">+</view>
+        </view>
+      </view>
+      
+      <!-- Fare Sharing Section (Only show if needPeople) -->
+      <view class="form-section" wx:if="{{localEditingPost.needPeople}}">
+        <view class="section-title">均摊油费</view>
+        <view class="toggle-switch" bindtap="toggleFareSharing">
+          <view class="switch-track {{localEditingPost.shareGasFee ? 'active' : ''}}">
+            <view class="switch-thumb"></view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- Additional Info Section -->
+      <view class="form-section">
+        <view class="section-title">补充信息</view>
+        <textarea 
+          class="content-textarea" 
+          value="{{localEditingPost.content}}" 
+          placeholder="请输入地点、时间等信息" 
+          bindinput="onEditContentInput"
+          maxlength="200"
+        ></textarea>
+      </view>
+      
+      <!-- WeChat ID Section -->
+      <view class="form-section">
+        <view class="section-title">微信号</view>
+        <input 
+          class="wechat-input" 
+          value="{{localEditingPost.wechatID}}" 
+          placeholder="请输入微信号以便联系" 
+          bindinput="onEditWechatInput"
+        />
+      </view>
+    </scroll-view>
+    
+    <!-- Footer -->
+    <view class="modal-footer">
+      <view class="cancel-btn" bindtap="onCancel">取消</view>
+      <view class="save-btn {{isSubmitting ? 'disabled' : ''}}" bindtap="onSave">
+        {{isSubmitting ? '提交中...' : '保存'}}
+      </view>
+    </view>
+  </view>
+</view> 

@@ -1,7 +1,8 @@
 {
     "projectname": "miniprogram",
     "setting": {
-        "compileHotReLoad": true
+        "compileHotReLoad": true,
+        "urlCheck": false
     },
     "libVersion": "3.7.8"
 }

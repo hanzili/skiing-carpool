@@ -1,9 +1,12 @@
+import ApiService from '../../services/api.js';
+
 Page({
   data: {
     posts: [],
     type: '', // needCar 或 needPeople
     showWechatModal: false,
-    currentWechat: ''
+    currentWechat: '',
+    isLoading: false
   },
 
   onLoad(options) {
@@ -12,30 +15,42 @@ Page({
   },
 
   async loadPosts() {
-    const db = wx.cloud.database()
-    const _ = db.command
-    const posts = await db.collection('carpools')
-      .where({
-        type: this.data.type,
-        status: 'active',  // 未完成的拼车
-        _openid: _.exists(true) // 确保帖子有发布者
-      })
-      .orderBy('departure_time', 'asc')
-      .get()
+    this.setData({ isLoading: true });
     
-    // Format posts with Montreal time
-    const formattedPosts = posts.data.map(post => ({
-      _id: post._id,
-      content: post.content,
-      type: post.type,
-      wechat: post.wechat,
-      status: post.status,
-      departure_time: post.departure_time.split('T')[0], // Just keep YYYY-MM-DD format
-      number_of_people: post.number_of_people,
-      share_fare: this.data.type === 'needPeople' ? post.share_fare : null
-    }))
-    
-    this.setData({ posts: formattedPosts })
+    try {
+      // Get all carpools from the API
+      const allCarpools = await ApiService.getAllCarpools();
+      
+      // Filter by type
+      const typeCarpools = allCarpools.filter(post => post.type === this.data.type);
+      
+      // Format posts with consistent data format
+      const formattedPosts = typeCarpools.map(post => ({
+        id: post.id,
+        content: post.content,
+        type: post.type,
+        wechat: post.wechat,
+        departure_time: post.departure_time.split('T')[0], // Just keep YYYY-MM-DD format
+        number_of_people: post.number_of_people,
+        share_fare: post.type === 'needPeople' ? post.share_fare : false,
+        status: 'active' // Add default status
+      }));
+      
+      // Sort by departure time
+      formattedPosts.sort((a, b) => new Date(a.departure_time) - new Date(b.departure_time));
+      
+      this.setData({ 
+        posts: formattedPosts,
+        isLoading: false 
+      });
+    } catch (error) {
+      console.error('Failed to load carpools:', error);
+      wx.showToast({
+        title: '加载失败',
+        icon: 'error'
+      });
+      this.setData({ isLoading: false });
+    }
   },
 
   copyWechat(e) {

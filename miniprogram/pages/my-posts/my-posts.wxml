@@ -6,146 +6,67 @@
 
   <!-- Only show content when not loading -->
   <block wx:else>
-    <view class="post-list">
-      <view 
-        wx:for="{{posts}}" 
-        wx:key="_id"
-        class="post-item"
-      >
-        <!-- 第一行：类型和状态 -->
-        <view class="post-header">
-          <text class="post-type">{{item.type === 'needCar' ? '人找车' : '车找人'}}</text>
-          <text class="post-status {{item.status}} {{item.isExpired ? 'expired' : ''}}">
-            {{item.status === 'active' ? (item.isExpired ? '已过期' : '进行中') : '已完成'}}
-          </text>
-        </view>
-
-        <!-- 第二行：出发时间和内容 -->
-        <view class="departure-time">出发时间：{{item.departureTime}}</view>
-        <view class="post-content">{{item.content}}</view>
-
-        <!-- 第三行：人数和车费 -->
-        <view class="trip-info">
-          <text class="people-count">人数：{{item.number_of_people}}人</text>
-          <text class="fare-info" wx:if="{{item.type === 'needPeople'}}">{{item.share_fare ? '需分摊车费' : '不分摊车费'}}</text>
-        </view>
-
-        <!-- 操作按钮 -->
-        <view class="post-actions">
-          <button 
-            class="btn-edit"
-            size="mini"
-            bindtap="onEditPost"
-            data-id="{{item._id}}"
-            data-content="{{item.content}}"
-            data-wechat="{{item.wechat}}"
-            data-type="{{item.type}}"
-            data-departure-time="{{item.departureTime}}"
-            data-number-of-people="{{item.number_of_people}}"
-            data-share-fare="{{item.share_fare}}"
-            disabled="{{updatingPostId === item._id}}"
-          >
-            编辑
-          </button>
-          <button 
-            class="btn-status {{item.status === 'completed' ? 'btn-completed' : ''}}"
-            size="mini"
-            bindtap="onStatusChange"
-            data-id="{{item._id}}"
-            loading="{{updatingPostId === item._id}}"
-            disabled="{{updatingPostId === item._id}}"
-          >
-            {{item.status === 'active' ? '完成行程' : '重新发布'}}
-          </button>
-        </view>
+    <!-- 标签切换 -->
+    <view class="tab-bar">
+      <view class="tab {{activeTab === 'active' ? 'active' : ''}}" bindtap="switchTab" data-tab="active">
+        进行中
       </view>
+      <view class="tab {{activeTab === 'archived' ? 'active' : ''}}" bindtap="switchTab" data-tab="archived">
+        已归档
+      </view>
+    </view>
+
+    <view class="post-list">
+      <post-item 
+        wx:for="{{posts}}" 
+        wx:key="id"
+        post="{{item}}"
+        isArchived="{{item.isArchived}}"
+        expandedId="{{expandedId}}"
+        possibleSeats="{{possibleSeats}}"
+        isActive="{{activeTab === 'active'}}"
+        deletingPostId="{{deletingPostId}}"
+        bind:toggleExpand="toggleExpand"
+        bind:updateSeats="updateSeats"
+        bind:updateStatus="updateStatus"
+        bind:editPost="onEditPost"
+        bind:deletePost="onDeletePost"
+      />
     </view>
 
     <view wx:if="{{posts.length === 0}}" class="empty-tip">
-      暂无发布信息
+      暂无{{activeTab === 'active' ? '进行中' : '已归档'}}的拼车信息
     </view>
   </block>
 
-  <!-- 编辑弹窗 -->
-  <view class="edit-modal" wx:if="{{showEditModal}}">
-    <view class="edit-content">
-      <view class="edit-header">编辑信息</view>
+  <!-- 编辑弹窗组件 -->
+  <edit-modal
+    showModal="{{showEditModal}}"
+    editingPost="{{editingPost}}"
+    isSubmitting="{{isSubmittingEdit}}"
+    peopleRange="{{peopleRange}}"
+    bind:contentInput="onEditContentInput"
+    bind:wechatInput="onEditWechatInput"
+    bind:timeChange="onEditDepartureTimeChange"
+    bind:peopleChange="onEditPeopleChange"
+    bind:shareFareChange="onShareFareChange"
+    bind:submit="onEditSubmit"
+    bind:cancel="onEditCancel"
+  />
+
+  <!-- 微信授权弹窗 -->
+  <view class="wechat-prompt" wx:if="{{showWechatPrompt}}">
+    <view class="wechat-prompt-content">
+      <view class="wechat-prompt-header">微信登录</view>
+      <view class="wechat-prompt-text">请授权获取微信信息，以便使用拼车功能</view>
       
-      <view class="edit-form">
-        <!-- 出发时间 -->
-        <view class="form-item">
-          <picker mode="date" value="{{editingPost.departureTime}}" bindchange="onEditDepartureTimeChange">
-            <view class="picker-wrapper">
-              <text class="label">出发时间</text>
-              <view class="picker-value {{!editingPost.departureTime ? 'placeholder' : ''}}">
-                {{editingPost.departureTime || '请选择出发日期'}}
-              </view>
-            </view>
-          </picker>
-        </view>
-
-        <!-- 人数 -->
-        <view class="form-item">
-          <picker mode="selector" range="{{peopleRange}}" value="{{editingPost.peopleIndex}}" bindchange="onEditPeopleChange">
-            <view class="picker-wrapper">
-              <text class="label">人数</text>
-              <view class="picker-value {{editingPost.peopleIndex === -1 ? 'placeholder' : ''}}">
-                {{editingPost.peopleIndex === -1 ? '请选择人数' : editingPost.number_of_people + '人'}}
-              </view>
-            </view>
-          </picker>
-        </view>
-
-        <!-- 只有车找人类型才显示分担车费选项 - 移到人数后面 -->
-        <view class="form-item" wx:if="{{editingPost.type === 'needPeople'}}">
-          <text class="label">车费分摊</text>
-          <radio-group class="share-fare-radio" bindchange="onShareFareChange">
-            <label class="radio-label">
-              <radio value="true" checked="{{editingPost.share_fare}}"/>需要分摊
-            </label>
-            <label class="radio-label">
-              <radio value="false" checked="{{!editingPost.share_fare}}"/>不需要分摊
-            </label>
-          </radio-group>
-        </view>
-
-        <!-- 拼车信息 -->
-        <view class="form-item">
-          <text class="label">拼车信息</text>
-          <textarea 
-            class="edit-textarea"
-            value="{{editingPost.content}}"
-            placeholder="请输入出发地和目的地"
-            bindinput="onEditContentInput"
-            maxlength="150"
-          />
-          <view class="word-limit">{{editingPost.content.length}}/150</view>
-        </view>
-
-        <!-- 微信号 -->
-        <view class="form-item">
-          <view class="wechat-input-wrapper">
-            <image class="wechat-icon" src="/images/wechat-color.svg" />
-            <input 
-              class="wechat-field"
-              value="{{editingPost.wechat}}"
-              placeholder="请输入微信号"
-              bindinput="onEditWechatInput"
-              maxlength="30"
-            />
-          </view>
-        </view>
-      </view>
-
-      <view class="modal-footer">
-        <view class="modal-btn" bindtap="onEditCancel">取消</view>
-        <view 
-          class="modal-btn modal-btn-primary {{isSubmittingEdit ? 'disabled' : ''}}" 
-          bindtap="{{!isSubmittingEdit ? 'onEditSubmit' : ''}}"
-        >
-          {{isSubmittingEdit ? '保存中...' : '保存'}}
-        </view>
-      </view>
+      <button 
+        class="wechat-auth-btn" 
+        open-type="getUserInfo" 
+        bindgetuserinfo="onGetUserInfo">
+        <view class="wechat-icon-text">微信</view>
+        微信授权登录
+      </button>
     </view>
   </view>
 </view> 

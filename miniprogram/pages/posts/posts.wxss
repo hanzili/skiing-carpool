@@ -3,6 +3,7 @@
   min-height: 100vh;
   background: #e3f2fd; /* Light blue background */
   padding: 24rpx;
+  padding-bottom: 150rpx; /* Ensure content doesn't get hidden under tab bar */
 }
 
 .header {

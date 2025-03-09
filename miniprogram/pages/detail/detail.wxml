@@ -1,0 +1,68 @@
+<view class="container">
+  <!-- 详情内容 -->
+  <view class="content-container">
+    <!-- 基本信息卡片 -->
+    <view class="detail-card">
+      <view class="card-header">
+        <view class="type-badge {{carpool.type === 'needCar' ? 'people-badge' : 'car-badge'}}">
+          {{carpool.type === 'needCar' ? '人找车' : '车找人'}}
+        </view>
+        <view class="time-ago">{{carpool.timeAgo}}发布</view>
+        <view class="people-count {{carpool.type === 'needCar' ? 'people-count-green' : 'people-count-blue'}}">
+          {{carpool.type === 'needPeople' ? '可载' : ''}}{{carpool.number_of_people}}人
+        </view>
+      </view>
+
+      <view class="date-section">
+        <view class="departure-info">
+          <view class="departure-date">{{carpool.departure_date}} {{carpool.departure_weekday}}</view>
+          <view class="fare-info" wx:if="{{carpool.share_fare}}">需分担车费</view>
+        </view>
+        <view class="card-share-btn" bindtap="onShareTap">
+          <view class="card-share-icon"></view>
+        </view>
+      </view>
+
+      <view class="divider"></view>
+
+      <view class="content-section">
+        <text class="content-text">{{carpool.content}}</text>
+      </view>
+    </view>
+
+    <!-- 发布者信息和微信号 -->
+    <view class="user-card">
+      <view class="user-info">
+        <image wx:if="{{carpool.avatar}}" class="avatar" src="{{carpool.avatar}}"></image>
+        <view wx:else class="avatar avatar-placeholder"></view>
+        <view class="user-details">
+          <view class="username">{{carpool.nickname}}</view>
+          <view class="user-stats">已完成 {{carpoolCount || 0}} 次拼车</view>
+        </view>
+      </view>
+
+      <button class="copy-btn" bindtap="copyWechat">
+        <view class="copy-icon"></view>
+        复制微信号
+      </button>
+    </view>
+  </view>
+</view>
+
+<!-- 分享弹窗 -->
+<view class="share-modal" wx:if="{{showShareModal}}">
+  <view class="share-panel">
+    <view class="share-title">分享</view>
+    <view class="share-options">
+      <button class="share-option" open-type="share">
+        <view class="wechat-icon"></view>
+        <view class="option-name">微信</view>
+      </button>
+      <button class="share-option" bindtap="generatePoster">
+        <view class="poster-icon"></view>
+        <view class="option-name">生成海报</view>
+      </button>
+    </view>
+    <button class="cancel-btn" bindtap="closeShareModal">取消</button>
+  </view>
+</view> 

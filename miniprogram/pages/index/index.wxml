@@ -1,34 +1,76 @@
-<view class="container">
-  <view class="header">
-    <text class="title">滑雪拼车</text>
-    <text class="subtitle">找到你的滑雪伙伴 ⛷️</text>
+<view class="container flex flex-col">
+  <!-- 顶部搜索区域 - Now outside the normal padding -->
+  <view class="search-wrapper">
+    <view class="search-bar">
+      <view class="search-icon-wrapper">
+        <icon type="search" size="16" color="#888"></icon>
+      </view>
+      <input type="text" placeholder="搜索信息" class="search-input" bindinput="onSearchInput" bindconfirm="onSearch" value="{{searchQuery}}" />
+    </view>
   </view>
   
-  <view class="category-list">
-    <view 
-      wx:for="{{categories}}" 
-      wx:key="id"
-      class="category-card"
-      data-id="{{item.id}}"
-      hover-class="card-hover"
-      bindtap="onCategoryTap"
-    >
-      <view class="card-content">
-        <view class="icon-wrapper {{item.id === 'needCar' ? 'blue' : 'green'}}">
-          <image 
-            class="icon" 
-            src="/images/{{item.id === 'needCar' ? 'car.svg' : 'person.svg'}}"
-            mode="aspectFit"
-          />
+  <!-- Main content with padding -->
+  <view class="content-container">
+    <!-- 筛选标签 -->
+    <view class="filter-tabs">
+      <view class="filter-btn {{filterType === 'all' ? 'active' : ''}}" data-type="all" bindtap="setFilterType">全部</view>
+      <view class="filter-btn {{filterType === 'needCar' ? 'active' : ''}}" data-type="needCar" bindtap="setFilterType">人找车</view>
+      <view class="filter-btn {{filterType === 'needPeople' ? 'active' : ''}}" data-type="needPeople" bindtap="setFilterType">车找人</view>
+      <view class="filter-btn {{filterType === 'today' ? 'active' : ''}}" data-type="today" bindtap="setFilterType">今日出发</view>
+      <view class="filter-btn {{filterType === 'thisweek' ? 'active' : ''}}" data-type="thisweek" bindtap="setFilterType">本周</view>
+    </view>
+
+    <!-- API Error Message -->
+    <view wx:if="{{apiError}}" class="api-error">
+      <view class="error-message">{{apiError}}</view>
+      <button class="retry-btn" bindtap="testApiConnection">重试连接</button>
+    </view>
+
+    <!-- Loading Indicator -->
+    <view wx:if="{{isLoading && !apiError}}" class="loading-container">
+      <view class="spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 拼车列表 -->
+    <view class="carpool-list" wx:if="{{!apiError && !isLoading}}">
+      <view wx:for="{{carpools}}" wx:key="id" class="carpool-card">
+        <view class="flex justify-between items-start mb-2">
+          <view class="flex items-center">
+            <view class="type-badge {{item.type === 'needCar' ? 'type-people' : 'type-car'}}">
+              {{item.type === 'needCar' ? '人找车' : '车找人'}}
+            </view>
+            <view class="ml-2 text-xs text-gray-500">{{item.timeAgo}}</view>
+          </view>
+          <view class="text-sm font-medium {{item.type === 'needCar' ? 'text-green-600' : 'text-blue-600'}}">
+            {{item.type === 'needPeople' ? '可载' : ''}}{{item.number_of_people}}人
+          </view>
         </view>
-        <view class="card-text">
-          <text class="card-title">{{item.name}}</text>
-          <text class="card-description">{{item.id === 'needCar' ? '寻找可以搭车的司机' : '寻找一起拼车的乘客'}}</text>
+        
+        <view class="mb-2">
+          <view class="font-medium">{{item.departure_date}} {{item.departure_weekday}}</view>
+          <view class="text-sm text-gray-600" wx:if="{{item.share_fare}}">需分担车费</view>
+        </view>
+        
+        <view class="text-sm text-gray-700 mb-3">{{item.content}}</view>
+        
+        <view class="flex justify-between items-center">
+          <view class="flex items-center">
+            <image wx:if="{{item.avatar}}" src="{{item.avatar}}" class="w-6 h-6 rounded-full mr-2"></image>
+            <view wx:else class="avatar-placeholder w-6 h-6 rounded-full mr-2"></view>
+            <text class="text-xs font-medium">{{item.nickname}}</text>
+          </view>
+          <button class="detail-btn" data-id="{{item.id}}" bindtap="viewDetail">查看详情</button>
         </view>
       </view>
-      <view class="card-arrow">
-        <text class="arrow">›</text>
-      </view>
+      
+      <!-- Bottom Spacer -->
+      <view class="bottom-spacer"></view>
+    </view>
+
+    <!-- Empty State -->
+    <view class="empty-state" wx:if="{{!apiError && !isLoading && carpools.length === 0}}">
+      <text>暂无符合条件的拼车信息</text>
     </view>
   </view>
 </view> 

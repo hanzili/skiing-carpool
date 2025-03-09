@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "post-item": "../../components/post-item/post-item",
+    "edit-modal": "../../components/edit-modal/edit-modal"
+  },
+  "navigationBarTitleText": "我的拼车"
+} 

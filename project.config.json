@@ -1,12 +1,12 @@
 {
-  "description": "滑雪拼车小程序",
+  "description": "skioop拼车小程序",
   "packOptions": {
     "ignore": [],
     "include": []
   },
   "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
-  "projectname": "skiing-carpool",
+  "projectname": "skioop-carpool",
   "setting": {
     "useCompilerPlugins": [],
     "babelSetting": {
