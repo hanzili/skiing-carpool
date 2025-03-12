@@ -1,4 +1,8 @@
 {
   "component": true,
-  "usingComponents": {}
+  "usingComponents": {},
+  "componentPlaceholder": {
+    "type": "view",
+    "style": "height: 120px; background-color: #f7f7f7; margin: 10px; border-radius: 8px;"
+  }
 } 

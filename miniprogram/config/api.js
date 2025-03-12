@@ -1,14 +1,11 @@
 // API environment configuration
 const ENV = {
-  // For development using localhost (requires "Does not verify valid domain names..." setting)
-  LOCAL: 'http://localhost',
-  
   // For development using local network IP (replace with your computer's IP address on your network)
   // Example: 'http://192.168.1.100'
-  LOCAL_IP: 'http://10.227.238.129:3000',
+  LOCAL_IP: 'http://172.31.166.47:3000',
   
   // For production with your actual backend server
-  PRODUCTION: 'https://your-api-server.com'
+  PRODUCTION: 'https://api.memecoooins.com'
 };
 
 // Select which environment to use

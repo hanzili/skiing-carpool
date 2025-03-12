@@ -1,4 +1,5 @@
 import ApiService from '../../services/api.js';
+import AuthService from '../../services/auth.js';
 
 Page({
   data: {
@@ -12,10 +13,9 @@ Page({
     peopleIndex: 0,
     isSubmitting: false,
     hasSubmitted: false,
-    isLoggedIn: false,
-    showLoginModal: false,
-    loginCode: null,
+    hasUserInfo: false,
     userInfo: null,
+    showWechatPrompt: false,
     isLoading: true
   },
 
@@ -36,125 +36,76 @@ Page({
   // 检查用户是否已登录 - 保持与 my-posts 页面一致的方法
   async checkUserLogin() {
     try {
-      // 检查是否有认证令牌
-      const token = wx.getStorageSync('auth_token');
-      const userInfo = wx.getStorageSync('user_info');
-      
-      if (!token || !userInfo) {
-        // 首先尝试微信登录获取code
-        const loginResult = await new Promise((resolve, reject) => {
-          wx.login({
-            success: res => resolve(res),
-            fail: err => reject(err)
-          });
-        });
+      // Use AuthService to check login status
+      if (AuthService.isLoggedIn()) {
+        const userInfo = AuthService.getUserInfo();
         
-        if (!loginResult.code) {
-          wx.showToast({
-            title: '登录失败',
-            icon: 'error'
-          });
-          return;
-        }
-        
-        // 保存code并显示登录弹窗
-        this.setData({ 
-          loginCode: loginResult.code,
-          showLoginModal: true,
-          isLoggedIn: false,
+        // User is logged in
+        this.setData({
+          userInfo,
+          hasUserInfo: true,
+          showWechatPrompt: false,
           isLoading: false
         });
       } else {
-        // 已有登录信息，设置到data
-        this.setData({
-          userInfo: typeof userInfo === 'string' ? JSON.parse(userInfo) : userInfo,
-          isLoggedIn: true,
-          showLoginModal: false,
-          isLoading: false,
-          nickname: typeof userInfo === 'string' 
-            ? JSON.parse(userInfo).nickName 
-            : userInfo.nickName || userInfo.nickname || ''
+        // User is not logged in, show login prompt
+        this.setData({ 
+          hasUserInfo: false,
+          showWechatPrompt: true,
+          isLoading: false 
         });
       }
     } catch (error) {
       console.error('Failed to check login status:', error);
       this.setData({ 
-        showLoginModal: true,
-        isLoggedIn: false,
+        hasUserInfo: false,
+        showWechatPrompt: true,
         isLoading: false 
       });
     }
   },
   
-  // 处理用户授权结果 - 与 my-posts 页面一致
-  async handleLogin() {
-    try {
-      // First get a fresh login code to avoid the expired code issue
-      await new Promise((resolve, reject) => {
-        wx.login({
-          success: res => {
-            if (res.code) {
-              this.setData({ loginCode: res.code });
-              resolve(res);
-            } else {
-              reject(new Error('Failed to get login code'));
-            }
-          },
-          fail: err => reject(err)
+  // Handle login event from login-modal component
+  onLogin(e) {
+    const { code, userInfo } = e.detail;
+    
+    // Use the AuthService to handle login
+    AuthService.login(code, userInfo)
+      .then(result => {
+        if (result && result.token) {
+          this.setData({
+            userInfo,
+            hasUserInfo: true,
+            showWechatPrompt: false
+          });
+          
+          wx.showToast({
+            title: '登录成功',
+            icon: 'success'
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Login failed:', error);
+        wx.showToast({
+          title: '登录失败',
+          icon: 'none'
         });
       });
-      
-      if (!this.data.loginCode) {
-        throw new Error('No login code available');
-      }
-      
-      // 获取用户信息
-      const userProfileRes = await new Promise((resolve, reject) => {
-        wx.getUserProfile({
-          desc: '用于显示您的昵称和头像',
-          success: res => resolve(res),
-          fail: err => reject(err)
-        });
-      });
-      
-      const userInfo = userProfileRes.userInfo;
-      
-      // 调用登录API
-      const loginResponse = await ApiService.login(this.data.loginCode, {
-        nickName: userInfo.nickName,
-        avatarUrl: userInfo.avatarUrl
-      });
-      
-      // 保存JWT令牌和用户信息
-      wx.setStorageSync('auth_token', loginResponse.token);
-      wx.setStorageSync('user_info', JSON.stringify(userInfo));
-      if (loginResponse.user) {
-        wx.setStorageSync('user_id', loginResponse.user.id);
-        wx.setStorageSync('user_openid', loginResponse.user.openid);
-      }
-      
-      this.setData({
-        userInfo: userInfo,
-        isLoggedIn: true,
-        showLoginModal: false
-      });
-      
-      wx.showToast({
-        title: '登录成功',
-        icon: 'success'
-      });
-    } catch (error) {
-      console.error('Failed to login:', error);
-      wx.showToast({
-        title: '登录失败',
-        icon: 'none'
-      });
-    }
   },
   
-  // 关闭登录弹窗
-  closeLoginModal() {
-    this.setData({ showLoginModal: false });
+  // Handle login error event from login-modal
+  onLoginError(e) {
+    console.error('Login error:', e.detail.error);
+    wx.showToast({
+      title: '登录失败',
+      icon: 'none'
+    });
+  },
+  
+  // Handle cancel event from login-modal
+  onLoginCancel() {
+    this.setData({ showWechatPrompt: false });
   },
   
   // Switch between "Need Car" and "Need People" types
@@ -264,8 +215,8 @@ Page({
     }
     
     // Check if user is logged in
-    if (!this.data.isLoggedIn) {
-      this.setData({ showLoginModal: true });
+    if (!this.data.hasUserInfo) {
+      this.setData({ showWechatPrompt: true });
       return;
     }
     
@@ -325,12 +276,11 @@ Page({
           icon: 'none',
           duration: 2000
         });
-        // Clear existing tokens as they seem invalid
-        wx.removeStorageSync('auth_token');
-        wx.removeStorageSync('user_info');
+        // Clear existing tokens and show login prompt
+        AuthService.logout();
         this.setData({ 
-          isLoggedIn: false,
-          showLoginModal: true
+          hasUserInfo: false,
+          showWechatPrompt: true
         });
       } else {
         wx.showToast({

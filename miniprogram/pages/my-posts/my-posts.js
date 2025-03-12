@@ -4,6 +4,7 @@
  */
 import ApiService from '../../services/api';
 import DateUtils from '../../utils/date-utils';
+import AuthService from '../../services/auth';
 
 Page({
   /**
@@ -119,11 +120,10 @@ Page({
   // Check if user is logged in
   async checkUserLogin() {
     try {
-      // Try to get user info from storage
-      const userInfo = wx.getStorageSync('userInfo');
-      const hasToken = !!wx.getStorageSync('auth_token') || !!wx.getStorageSync('token');
-      
-      if (userInfo && hasToken) {
+      // Use AuthService to check login status
+      if (AuthService.isLoggedIn()) {
+        const userInfo = AuthService.getUserInfo();
+        
         // User is logged in
         this.setData({
           userInfo,
@@ -151,49 +151,46 @@ Page({
     }
   },
   
-  // Handle WeChat authorization
-  async onGetUserInfo(e) {
-    console.log('WeChat auth response:', e);
-    if (e.detail.userInfo) {
-      try {
-        // User granted permission, get login code
-        const { code } = await new Promise((resolve, reject) => {
-          wx.login({
-            success: resolve,
-            fail: reject
-          });
-        });
-        
-        console.log('Got login code:', code);
-        
-        // Login to backend
-        const result = await ApiService.login(code, e.detail.userInfo);
-        console.log('Login result:', result);
-        
+  // Handle login event from login-modal component
+  onLogin(e) {
+    const { code, userInfo } = e.detail;
+    
+    // Use the AuthService to handle login
+    AuthService.login(code, userInfo)
+      .then(result => {
         if (result && result.token) {
-          // Store token and user info
-          wx.setStorageSync('auth_token', result.token);
-          wx.setStorageSync('userInfo', e.detail.userInfo);
-          
-          // Update state
-    this.setData({
-            userInfo: e.detail.userInfo,
+          this.setData({
+            userInfo,
             hasUserInfo: true,
             showWechatPrompt: false,
             isLoading: true
           });
           
-          // Load posts
+          // Load posts after successful login
           this.loadMyPosts(this.data.activeTab === 'archived');
         }
-      } catch (error) {
-        console.error('Login error:', error);
+      })
+      .catch(error => {
+        console.error('Login failed:', error);
         wx.showToast({
           title: '登录失败',
-          icon: 'error'
+          icon: 'none'
         });
-      }
-    }
+      });
+  },
+  
+  // Handle login error event from login-modal
+  onLoginError(e) {
+    console.error('Login error:', e.detail.error);
+    wx.showToast({
+      title: '登录失败',
+      icon: 'none'
+    });
+  },
+  
+  // Handle cancel event from login-modal
+  onLoginCancel() {
+    this.setData({ showWechatPrompt: false });
   },
 
   /**
@@ -434,8 +431,11 @@ Page({
   onEditPost(e) {
     const { id, content, wechat, type, departure_time, number_of_people, share_fare } = e.detail;
     
-    // Format departure time using our utility function
+    console.log('Original departure_time from post:', departure_time);
+    
+    // Format departure time using our improved utility function
     const formattedDepartureTime = DateUtils.formatToDateOnly(departure_time);
+    console.log('Formatted departure time for edit modal:', formattedDepartureTime);
     
     // Parse the number of people with better error handling
     let peopleCount;
@@ -740,9 +740,11 @@ Page({
       
       const editingPost = this.data.editingPost;
       console.log('Submitting edit for post:', editingPost.id);
+      console.log('Original departure time:', editingPost.departure_time);
       
-      // Format the departure time for API
+      // Format the departure time for API - Use our improved formatToISO
       const formattedDepartureTime = DateUtils.formatToISO(editingPost.departure_time);
+      console.log('Formatted departure time for API:', formattedDepartureTime);
       
       // Prepare update data
       const updateData = {

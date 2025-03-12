@@ -81,22 +81,10 @@
   </button>
 </view>
 
-<!-- 登录弹窗 - 与 my-posts 页面保持一致 -->
-<view class="wechat-prompt" wx:if="{{showLoginModal}}">
-  <view class="wechat-prompt-content">
-    <view class="wechat-prompt-header">微信登录</view>
-    <view class="wechat-prompt-text">请授权获取微信信息，以便使用拼车功能</view>
-    
-    <button 
-      class="wechat-auth-btn" 
-      bindtap="handleLogin">
-      微信授权登录
-    </button>
-    
-    <button 
-      class="wechat-cancel-btn" 
-      bindtap="closeLoginModal">
-      取消
-    </button>
-  </view>
-</view> 
+<!-- 使用统一的登录弹窗组件 -->
+<login-modal 
+  visible="{{showWechatPrompt}}"
+  bind:login="onLogin"
+  bind:loginerror="onLoginError"
+  bind:cancel="onLoginCancel"
+/> 

@@ -1,0 +1,14 @@
+<view class="login-modal {{visible ? 'visible' : ''}}" wx:if="{{visible}}">
+  <view class="login-modal-mask"></view>
+  <view class="login-modal-content">
+    <view class="login-modal-header">微信登录</view>
+    <view class="login-modal-text">请授权获取微信信息，以便使用拼车功能</view>
+    
+    <button 
+      class="login-auth-btn" 
+      hover-class="login-auth-btn-hover"
+      bindtap="handleLogin">
+      微信授权登录
+    </button>
+  </view>
+</view> 

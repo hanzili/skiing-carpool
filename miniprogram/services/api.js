@@ -1,4 +1,5 @@
 import apiConfig from '../config/api.js';
+import AuthService from './auth.js';
 
 // Helper function for HTTP requests
 const request = (url, method = 'GET', data = {}, requireAuth = false) => {
@@ -11,7 +12,7 @@ const request = (url, method = 'GET', data = {}, requireAuth = false) => {
   
   // 如果需要认证，添加令牌到请求头
   if (requireAuth) {
-    const token = wx.getStorageSync('auth_token') || wx.getStorageSync('token');
+    const token = AuthService.getToken();
     if (token) {
       header['Authorization'] = `Bearer ${token}`;
       console.log('Using auth token:', token.substring(0, 15) + '...');
@@ -37,8 +38,7 @@ const request = (url, method = 'GET', data = {}, requireAuth = false) => {
           // Handle specific error cases
           if (res.statusCode === 401) {
             // Auth token might be expired or invalid
-            wx.removeStorageSync('auth_token');
-            wx.removeStorageSync('token');
+            AuthService.logout();
             
             if (url !== apiConfig.endpoints.login) {
               // Prompt re-login for non-login endpoints
@@ -156,14 +156,87 @@ const ApiService = {
     // Ensure the date is in valid ISO format by parsing and reformatting
     if (carpoolData.departureTime) {
       try {
-        // Remove any non-ISO characters and try to construct a valid date
-        const sanitizedDate = carpoolData.departureTime.replace(/[^0-9\-:T.Z]/g, '');
-        const date = new Date(sanitizedDate);
-        if (!isNaN(date.getTime())) {
-          carpoolData.departureTime = date.toISOString();
-        } else {
-          // If date parsing fails, use current time
-          carpoolData.departureTime = new Date().toISOString();
+        console.log('Original departure time (before processing):', carpoolData.departureTime);
+        
+        // CRITICAL: Extract the actual date components regardless of format
+        let year, month, day, hour = 0, minute = 0;
+        
+        // If it's in "MM-DD" format like "04-15"
+        if (typeof carpoolData.departureTime === 'string' && carpoolData.departureTime.match(/^(\d{2})-(\d{2})$/)) {
+          const [, mm, dd] = carpoolData.departureTime.match(/^(\d{2})-(\d{2})$/);
+          year = new Date().getFullYear();
+          month = parseInt(mm, 10);
+          day = parseInt(dd, 10);
+          console.log(`Parsed MM-DD format: Year=${year}, Month=${month}, Day=${day}`);
+        }
+        // If it's in "YYYY-MM-DD" format
+        else if (typeof carpoolData.departureTime === 'string' && carpoolData.departureTime.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [yyyy, mm, dd] = carpoolData.departureTime.split('-').map(num => parseInt(num, 10));
+          year = yyyy;
+          month = mm;
+          day = dd;
+          console.log(`Parsed YYYY-MM-DD format: Year=${year}, Month=${month}, Day=${day}`);
+        }
+        // If it's a Chinese format like "04-07下午08:00"
+        else if (typeof carpoolData.departureTime === 'string' && 
+                (carpoolData.departureTime.includes('上午') || carpoolData.departureTime.includes('下午'))) {
+          
+          // Extract date part (MM-DD)
+          const dateMatch = carpoolData.departureTime.match(/(\d{2})-(\d{2})/);
+          if (dateMatch) {
+            month = parseInt(dateMatch[1], 10);
+            day = parseInt(dateMatch[2], 10);
+            year = new Date().getFullYear();
+            
+            // Extract time if available
+            const timeMatch = carpoolData.departureTime.match(/(\d{2}):(\d{2})/);
+            if (timeMatch) {
+              hour = parseInt(timeMatch[1], 10);
+              minute = parseInt(timeMatch[2], 10);
+              
+              // Adjust for PM
+              if (carpoolData.departureTime.includes('下午') && hour < 12) {
+                hour += 12;
+              }
+            }
+            console.log(`Parsed Chinese format: Year=${year}, Month=${month}, Day=${day}, Hour=${hour}, Minute=${minute}`);
+          }
+        }
+        // Already in ISO format
+        else if (carpoolData.departureTime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
+          console.log('Already in ISO format, will use as is');
+          // No processing needed
+        }
+        // Other formats - try to extract date components
+        else {
+          // Create a local date object
+          const localDate = new Date(carpoolData.departureTime);
+          if (!isNaN(localDate.getTime())) {
+            year = localDate.getFullYear();
+            month = localDate.getMonth() + 1; // JavaScript months are 0-indexed
+            day = localDate.getDate();
+            hour = localDate.getHours();
+            minute = localDate.getMinutes();
+            console.log(`Parsed from Date object: Year=${year}, Month=${month}, Day=${day}, Hour=${hour}, Minute=${minute}`);
+          } else {
+            // If all parsing methods fail, use current date/time
+            const now = new Date();
+            year = now.getFullYear();
+            month = now.getMonth() + 1;
+            day = now.getDate();
+            hour = now.getHours();
+            minute = now.getMinutes();
+            console.warn('Failed to parse date, using current date/time');
+          }
+        }
+        
+        // If we extracted valid date components, create an ISO string that preserves the local date
+        if (year && month && day) {
+          // CRITICAL: Set the hour to noon (12) in UTC to ensure the local date remains the same
+          // This prevents date shifts due to timezone conversion
+          const utcDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+          carpoolData.departureTime = utcDate.toISOString();
+          console.log('Final ISO date (with noon UTC to preserve local date):', carpoolData.departureTime);
         }
       } catch (error) {
         console.error('Date parsing error in updateCarpool:', error);
