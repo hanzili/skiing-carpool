@@ -88,6 +88,8 @@ Page({
       // Extract nickname and avatar from user relation if available
       nickname: carpool.user ? carpool.user.nickname : carpool.nickname,
       avatar: carpool.user ? carpool.user.avatar : carpool.avatar,
+      // Get wechat directly from carpool object
+      wechat: carpool.wechat || '',
       userId: carpool.user ? carpool.user.id : carpool.userId
     };
     
@@ -176,7 +178,7 @@ Page({
 
   // Copy WeChat ID to clipboard
   copyWechat() {
-    if (!this.data.carpool || !this.data.carpool.nickname) {
+    if (!this.data.carpool || !this.data.carpool.wechat) {
       wx.showToast({
         title: '微信号不可用',
         icon: 'none'
@@ -184,15 +186,20 @@ Page({
       return;
     }
     
-    // In this example, we use nickname as wechat ID
-    const wechatId = this.data.carpool.nickname;
+    const wechat = this.data.carpool.wechat;
     
     wx.setClipboardData({
-      data: wechatId,
+      data: wechat,
       success: () => {
         wx.showToast({
           title: '已复制微信号',
           icon: 'success'
+        });
+      },
+      fail: () => {
+        wx.showToast({
+          title: '复制失败',
+          icon: 'none'
         });
       }
     });

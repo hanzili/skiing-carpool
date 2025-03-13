@@ -2,10 +2,10 @@
 const ENV = {
   // For development using local network IP (replace with your computer's IP address on your network)
   // Example: 'http://192.168.1.100'
-  LOCAL_IP: 'http://172.31.166.47:3000',
+  LOCAL_IP: 'http://172.31.161.55:3000',
   
   // For production with your actual backend server
-  PRODUCTION: 'https://api.memecoooins.com'
+  PRODUCTION: 'https://znpdx.com'
 };
 
 // Select which environment to use

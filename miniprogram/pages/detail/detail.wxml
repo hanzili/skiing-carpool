@@ -41,9 +41,13 @@
         </view>
       </view>
 
-      <button class="copy-btn" bindtap="copyWechat">
+      <button class="copy-btn" bindtap="copyWechat" wx:if="{{carpool.wechat}}">
         <view class="copy-icon"></view>
         复制微信号
+      </button>
+      <button class="copy-btn disabled" wx:else>
+        <view class="copy-icon"></view>
+        微信号不可用
       </button>
     </view>
   </view>

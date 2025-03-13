@@ -171,6 +171,12 @@
   margin-bottom: 8rpx;
 }
 
+.wechat-id {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
 .user-stats {
   font-size: 24rpx;
   color: #9ca3af;
@@ -189,6 +195,12 @@
   position: relative;
   margin: 0;
   padding: 0;
+}
+
+.copy-btn.disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .copy-btn::after {

@@ -186,7 +186,11 @@ Page({
           share_fare: item.shareFare !== undefined ? item.shareFare : item.share_fare,
           // Extract nickname and avatar from user relation if available
           nickname: item.user ? item.user.nickname : item.nickname,
-          avatar: item.user ? item.user.avatar : item.avatar
+          avatar: item.user ? item.user.avatar : item.avatar,
+          // Get wechat directly from carpool object
+          wechat: item.wechat || '',
+          // Add truncated content
+          truncatedContent: item.content ? (item.content.length > 50 ? item.content.substring(0, 50) + '...' : item.content) : ''
         };
         
         // Format date: "3月7日 周五"

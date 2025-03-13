@@ -44,6 +44,7 @@
 .post-list {
   flex: 1;
   padding: 24rpx;
+  padding-bottom: 140rpx; /* Add bottom padding for better spacing */
 }
 
 .post-item {

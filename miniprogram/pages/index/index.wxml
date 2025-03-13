@@ -52,7 +52,7 @@
           <view class="text-sm text-gray-600" wx:if="{{item.share_fare}}">需分担车费</view>
         </view>
         
-        <view class="text-sm text-gray-700 mb-3">{{item.content}}</view>
+        <view class="text-sm text-gray-700 mb-3 content-text">{{item.truncatedContent}}</view>
         
         <view class="flex justify-between items-center">
           <view class="flex items-center">
