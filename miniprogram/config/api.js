@@ -5,11 +5,11 @@ const ENV = {
   LOCAL_IP: 'http://172.31.161.55:3000',
   
   // For production with your actual backend server
-  PRODUCTION: 'https://znpdx.com'
+  PRODUCTION: 'https://api.znpdx.com'
 };
 
 // Select which environment to use
-const CURRENT_ENV = ENV.LOCAL_IP;
+const CURRENT_ENV = ENV.PRODUCTION;
 
 const API_CONFIG = {
   // For WeChat mini programs, direct localhost requests don't work
