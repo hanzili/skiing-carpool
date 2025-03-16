@@ -4,5 +4,7 @@
     "edit-modal": "../../components/edit-modal/edit-modal",
     "login-modal": "../../components/login-modal/login-modal"
   },
-  "navigationBarTitleText": "我的拼车"
+  "navigationBarTitleText": "我的拼车",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
 } 

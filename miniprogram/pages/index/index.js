@@ -1,8 +1,22 @@
 import ApiService from '../../services/api.js';
+import CarpoolService from '../../services/carpool-service.js';
+import UIStateManager from '../../utils/ui-state-manager.js';
+import lifecycleBehavior from '../../behaviors/lifecycle-behavior';
 
 Page({
-  // Data properties
+  /**
+   * Behaviors
+   */
+  behaviors: [lifecycleBehavior],
+  
+  /**
+   * Page data
+   */
   data: {
+    // Tab bar configuration
+    tabBarIndex: 0,
+    
+    // UI state
     carpools: [],
     filterType: 'all',
     searchQuery: '',
@@ -10,22 +24,17 @@ Page({
     apiError: null
   },
 
-  // Lifecycle: When page loads
+  /**
+   * ==============================================
+   * Lifecycle methods (standard)
+   * ==============================================
+   */
   onLoad: function() {
-    // Test API connectivity first
-    this.testApiConnection();
+    this.onPageLoad();
   },
 
-  // Lifecycle: When page shows
   onShow: function() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 0
-      });
-    }
-    
-    // Refresh the data when returning to this page
-    this.loadCarpools();
+    this.onPageShow();
   },
 
   // Handle pull-down refresh
@@ -33,6 +42,33 @@ Page({
     this.loadCarpools();
   },
 
+  /**
+   * ==============================================
+   * Custom lifecycle methods (from behaviors)
+   * ==============================================
+   */
+  
+  /**
+   * Initialize the page - called from lifecycle behavior
+   */
+  initialize() {
+    // Test API connectivity first
+    this.testApiConnection();
+  },
+  
+  /**
+   * Refresh page data - called from lifecycle behavior
+   */
+  refreshPageData() {
+    // Refresh the data when returning to this page
+    this.loadCarpools();
+  },
+
+  /**
+   * ==============================================
+   * UI interaction methods
+   * ==============================================
+   */
   // Filter tab selection handler
   setFilterType: function(e) {
     const type = e.currentTarget.dataset.type;
@@ -57,21 +93,10 @@ Page({
   // View detail button handler
   viewDetail: function(e) {
     const id = e.currentTarget.dataset.id;
-    // Find the carpool object in our data
-    const carpool = this.data.carpools.find(item => item.id === id);
-    
-    if (carpool) {
-      // Encode and pass the full carpool data to the detail page
-      const carpoolData = encodeURIComponent(JSON.stringify(carpool));
-      wx.navigateTo({
-        url: `/pages/detail/detail?carpoolData=${carpoolData}`
-      });
-    } else {
-      wx.showToast({
-        title: '未找到拼车信息',
-        icon: 'none'
-      });
-    }
+    // Instead of passing the entire carpool object, just navigate with the ID
+    wx.navigateTo({
+      url: `/pages/detail/detail?id=${id}`
+    });
   },
 
   // Navigate to publish page
@@ -81,11 +106,14 @@ Page({
     });
   },
 
+  /**
+   * ==============================================
+   * API methods
+   * ==============================================
+   */
   // Test API connection
   testApiConnection: function() {
-    wx.showLoading({
-      title: '连接测试中',
-    });
+    UIStateManager.showLoading(this, 'isLoading', true, '连接测试中');
     
     ApiService.healthCheck()
       .then(response => {
@@ -96,67 +124,83 @@ Page({
       })
       .catch(err => {
         console.error('API connection test failed:', err);
-        this.setData({ 
-          apiError: '无法连接到后端API，请检查网络连接。Error: ' + (err.message || err) 
-        });
-        wx.hideLoading();
-        wx.showToast({
-          title: '连接失败',
-          icon: 'none',
-          duration: 2000
-        });
+        UIStateManager.hideLoading(this);
+        UIStateManager.showError(
+          this, 
+          err, 
+          'apiError', 
+          true, 
+          '连接失败'
+        );
       });
   },
 
   // Load carpools based on current filter and search
   loadCarpools: function() {
+    // Set loading state directly
     this.setData({ isLoading: true });
     
+    // Use direct API calls instead of the service method for better control
     let apiCall;
     
     // Select which API to call based on filter type
-    switch (this.data.filterType) {
-      case 'needCar':
-        apiCall = ApiService.getNeedCarCarpools();
-        break;
-      case 'needPeople':
-        apiCall = ApiService.getNeedPeopleCarpools();
-        break;
-      case 'today':
-        apiCall = ApiService.getTodayCarpools();
-        break;
-      case 'thisweek':
-        apiCall = ApiService.getThisWeekCarpools();
-        break;
-      default:
-        apiCall = ApiService.getAllCarpools();
+    if (this.data.searchQuery.trim()) {
+      // If there's a search query, use search API
+      apiCall = ApiService.searchCarpools(this.data.searchQuery);
+    } else {
+      switch (this.data.filterType) {
+        case 'needCar':
+          apiCall = ApiService.getNeedCarCarpools();
+          break;
+        case 'needPeople':
+          apiCall = ApiService.getNeedPeopleCarpools();
+          break;
+        case 'today':
+          apiCall = ApiService.getTodayCarpools();
+          break;
+        case 'thisweek':
+          apiCall = ApiService.getThisWeekCarpools();
+          break;
+        default:
+          apiCall = ApiService.getAllCarpools();
+      }
     }
     
-    // If there's a search query, use search API instead
-    if (this.data.searchQuery.trim()) {
-      apiCall = ApiService.searchCarpools(this.data.searchQuery);
-    }
+    // Show loading indicator
+    wx.showLoading({ title: '加载中' });
     
     apiCall
       .then(data => {
         console.log('API response:', data);
-        const processedData = this.processCarpoolData(data);
+        // Process the data with CarpoolService
+        const processedData = CarpoolService.processCarpoolData(data);
         
+        // Update UI state
         this.setData({
           carpools: processedData,
           isLoading: false,
           apiError: null
         });
         
+        // Always hide loading indicator
+        wx.hideLoading();
         wx.stopPullDownRefresh();
       })
       .catch(err => {
+        // Log the error
         console.error('Failed to load carpools:', err);
+        
+        // Clear loading states
         this.setData({ 
           isLoading: false,
-          apiError: '加载数据失败: ' + (err.message || err)
+          apiError: '加载数据失败: ' + (err.message || err),
+          carpools: [] // Clear carpools on error to avoid stale data
         });
         
+        // Always hide loading indicator
+        wx.hideLoading();
+        
+        // Show error message
         wx.showToast({
           title: '加载失败',
           icon: 'none',
@@ -164,9 +208,20 @@ Page({
         });
         
         wx.stopPullDownRefresh();
+      })
+      .finally(() => {
+        // Ensure loading states are cleared even if something unexpected happens
+        this.setData({ isLoading: false });
+        wx.hideLoading();
+        wx.stopPullDownRefresh();
       });
   },
   
+  /**
+   * ==============================================
+   * Helper methods
+   * ==============================================
+   */
   // Process data for display
   processCarpoolData: function(data) {
     if (!Array.isArray(data)) {

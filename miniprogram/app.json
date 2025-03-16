@@ -39,5 +39,10 @@
         "selectedIconPath": "images/profile-active.png"
       }
     ]
+  },
+  "usingComponents": {
+    "post-item": "/components/post-item/post-item",
+    "edit-modal": "/components/edit-modal/edit-modal",
+    "login-modal": "/components/login-modal/login-modal"
   }
 } 

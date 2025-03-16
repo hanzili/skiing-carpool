@@ -2,20 +2,26 @@ import apiConfig from '../config/api.js';
 import AuthService from './auth.js';
 
 // Helper function for HTTP requests
-const request = (url, method = 'GET', data = {}, requireAuth = false) => {
-  console.log(`Making ${method} request to: ${apiConfig.baseUrl}${url}`, JSON.stringify(data));
+const request = async (url, method = 'GET', data = {}, requireAuth = false) => {
+  console.log(`Making ${method} request to: ${apiConfig.baseUrl}${url}`);
   
   // 准备请求头
   const header = {
     'content-type': 'application/json'
   };
   
-  // 如果需要认证，添加令牌到请求头
+  // 如果需要认证，添加令牌到请求头并确保令牌有效
   if (requireAuth) {
+    // Ensure we have a valid token before proceeding
+    const isValid = await AuthService.ensureValidToken();
+    if (!isValid) {
+      console.error('Failed to get valid auth token for request to:', url);
+      return Promise.reject(new Error('AUTH_INVALID'));
+    }
+    
     const token = AuthService.getToken();
     if (token) {
       header['Authorization'] = `Bearer ${token}`;
-      console.log('Using auth token:', token.substring(0, 15) + '...');
     } else {
       console.error('Auth token missing for request to:', url);
       return Promise.reject(new Error('AUTH_TOKEN_MISSING'));
@@ -29,31 +35,15 @@ const request = (url, method = 'GET', data = {}, requireAuth = false) => {
       data,
       header,
       success: (res) => {
-        console.log(`Response from ${url}:`, JSON.stringify(res.data));
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
-          console.error(`Request to ${url} failed with status: ${res.statusCode}`, res.data);
+          console.error(`Request to ${url} failed with status: ${res.statusCode}`);
           
           // Handle specific error cases
           if (res.statusCode === 401) {
-            // Auth token might be expired or invalid
-            AuthService.logout();
-            
-            if (url !== apiConfig.endpoints.login) {
-              // Prompt re-login for non-login endpoints
-              wx.showModal({
-                title: '登录已过期',
-                content: '您的登录已过期，请重新登录',
-                showCancel: false,
-                success: () => {
-                  // Redirect to a page that handles login (e.g., home or profile)
-                  wx.reLaunch({
-                    url: '/pages/my-posts/my-posts'
-                  });
-                }
-              });
-            }
+            // Auth token is expired or invalid, use AuthService to handle
+            AuthService.handleAuthError();
             reject(new Error('AUTH_TOKEN_EXPIRED'));
           } else if (res.statusCode === 400 && res.data && res.data.error) {
             // Specific backend error message
@@ -114,6 +104,14 @@ const ApiService = {
     return request(apiConfig.endpoints.dbTest);
   },
   
+  // Token refresh endpoint - ADD THIS TO YOUR BACKEND
+  refreshToken: () => {
+    // This makes a request to refresh the token
+    // Pass the current token in the Authorization header
+    // The endpoint should validate the old token and issue a new one
+    return request(apiConfig.endpoints.refreshToken || '/api/auth/refresh-token', 'POST', {}, true);
+  },
+  
   // Carpool endpoints
   getAllCarpools: () => {
     return request(apiConfig.endpoints.getAllCarpools);
@@ -121,29 +119,36 @@ const ApiService = {
   
   // Get a single carpool by ID
   getCarpoolById: (id) => {
-    return request(`${apiConfig.endpoints.getCarpoolById}${id}`);
+    if (!id) {
+      console.error('getCarpoolById called with no ID');
+      return Promise.reject(new Error('Missing carpool ID'));
+    }
+    return request(`${apiConfig.endpoints.getCarpoolById}/${id}`);
   },
   
   // New filter endpoints
-  getNeedCarCarpools: () => {
-    return request(apiConfig.endpoints.needCarCarpools);
+  getNeedCarCarpools: (page = 1, pageSize = 10) => {
+    return request(`${apiConfig.endpoints.needCarCarpools}?page=${page}&pageSize=${pageSize}`);
   },
   
-  getNeedPeopleCarpools: () => {
-    return request(apiConfig.endpoints.needPeopleCarpools);
+  getNeedPeopleCarpools: (page = 1, pageSize = 10) => {
+    return request(`${apiConfig.endpoints.needPeopleCarpools}?page=${page}&pageSize=${pageSize}`);
   },
   
-  getTodayCarpools: () => {
-    return request(apiConfig.endpoints.todayCarpools);
+  getTodayCarpools: (page = 1, pageSize = 10) => {
+    return request(`${apiConfig.endpoints.todayCarpools}?page=${page}&pageSize=${pageSize}`);
   },
   
-  getThisWeekCarpools: () => {
-    return request(apiConfig.endpoints.thisWeekCarpools);
+  getThisWeekCarpools: (page = 1, pageSize = 10) => {
+    return request(`${apiConfig.endpoints.thisWeekCarpools}?page=${page}&pageSize=${pageSize}`);
   },
   
   // Search endpoint
-  searchCarpools: (query) => {
-    return request(`${apiConfig.endpoints.searchCarpools}?query=${encodeURIComponent(query)}`);
+  searchCarpools: (query, page = 1, pageSize = 10) => {
+    if (!query) {
+      return Promise.reject(new Error('Search query cannot be empty'));
+    }
+    return request(`${apiConfig.endpoints.searchCarpools}?query=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`);
   },
   
   createCarpool: (carpoolData) => {
@@ -151,6 +156,11 @@ const ApiService = {
   },
   
   updateCarpool: (id, carpoolData) => {
+    if (!id) {
+      console.error('updateCarpool called with no ID');
+      return Promise.reject(new Error('Missing carpool ID'));
+    }
+  
     console.log('updateCarpool - Raw data before request:', JSON.stringify(carpoolData));
     
     // Ensure the date is in valid ISO format by parsing and reformatting
@@ -246,26 +256,36 @@ const ApiService = {
     
     console.log('updateCarpool - Sanitized data after processing:', JSON.stringify(carpoolData));
     
-    return request(`${apiConfig.endpoints.updateCarpool}${id}`, 'PUT', carpoolData, true);
+    return request(`${apiConfig.endpoints.updateCarpool}/${id}`, 'PUT', carpoolData, true);
   },
   
   deleteCarpool: (id) => {
-    return request(`${apiConfig.endpoints.deleteCarpool}${id}`, 'DELETE', {}, true);
+    if (!id) {
+      console.error('deleteCarpool called with no ID');
+      return Promise.reject(new Error('Missing carpool ID'));
+    }
+    return request(`${apiConfig.endpoints.deleteCarpool}/${id}`, 'DELETE', {}, true);
   },
   
   // 用户相关接口
   login: async (code, userInfo, retryCount = 0) => {
     try {
+      console.log('[API SVC] Starting login with credentials');
+      
       // Max retry attempts
       const MAX_RETRIES = 2;
       
       // Use the provided code for first attempt
-      return await request(apiConfig.endpoints.login, 'POST', { 
+      const requestBody = { 
         code, 
-        nickName: userInfo.nickName,
-        avatarUrl: userInfo.avatarUrl
-      });
+        nickName: userInfo?.nickName,
+        avatarUrl: userInfo?.avatarUrl
+      };
+      
+      return await request(apiConfig.endpoints.login, 'POST', requestBody);
     } catch (error) {
+      console.error('[API SVC] Login error:', error.message);
+      
       // If the error is due to code already being used and we haven't exceeded retry limit
       if (error.message && 
           (error.message.includes('LOGIN_CODE_USED') || 
@@ -273,7 +293,7 @@ const ApiService = {
            error.message.includes('code been used')) && 
           retryCount < 2) {
         
-        console.log(`Login code error detected, refreshing code and retrying (attempt ${retryCount + 1})...`);
+        console.log(`[API SVC] Login code error, refreshing code (attempt ${retryCount + 1})`);
         
         // Get a fresh login code
         const freshCode = await getFreshLoginCode();

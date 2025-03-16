@@ -1,247 +1,243 @@
 import ApiService from '../../services/api.js';
+import CarpoolService from '../../services/carpool-service.js';
+import UIStateManager from '../../utils/ui-state-manager.js';
+import authBehavior from '../../behaviors/auth-behavior';
+import lifecycleBehavior from '../../behaviors/lifecycle-behavior';
 
 Page({
+  /**
+   * Behaviors
+   */
+  behaviors: [authBehavior, lifecycleBehavior],
+  
+  /**
+   * Page data
+   */
   data: {
+    // Tab bar configuration
+    tabBarIndex: -1, // Not in tab bar
+    
+    // Carpool data
     carpool: null,
+    carpoolId: null,
+    
+    // User statistics
+    userStats: null,
+    carpoolCount: 0,
+    
+    // UI state
     isLoading: true,
     showShareModal: false,
-    carpoolCount: 5 // Placeholder count of completed carpools
+    poster: {
+      show: false,
+      path: '',
+      saving: false
+    }
   },
 
-  onLoad(options) {
-    if (options.carpoolData) {
-      try {
-        // Decode and parse the carpool data
-        const carpool = JSON.parse(decodeURIComponent(options.carpoolData));
-        
-        // Display loading indicator briefly
-        wx.showLoading({ title: '加载中' });
-        
-        // Format the data for display
-        this.formatCarpoolData(carpool);
-        
-        setTimeout(() => {
-          wx.hideLoading();
-        }, 300);
-      } catch (error) {
-        console.error('Error parsing carpool data:', error);
-        wx.showToast({
-          title: '数据加载错误',
-          icon: 'error'
-        });
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
-      }
-    } else if (options.id) {
-      // If we only have an ID, fetch the carpool data
+  /**
+   * ==============================================
+   * Lifecycle methods (standard)
+   * ==============================================
+   */
+  onLoad: function(options) {
+    this.onPageLoad();
+    
+    // Get carpool ID from options
+    if (options.id) {
+      this.setData({ carpoolId: options.id });
       this.fetchCarpoolById(options.id);
     } else {
-      wx.showToast({
-        title: '未找到拼车信息',
-        icon: 'error'
-      });
+      UIStateManager.showError(this, new Error('Missing carpool ID'), null, true, '缺少拼车信息');
+      
+      // Go back to previous page after a delay
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
     }
   },
+
+  onShow: function() {
+    this.onPageShow();
+  },
+
+  /**
+   * ==============================================
+   * Custom lifecycle methods (from behaviors)
+   * ==============================================
+   */
+  
+  /**
+   * Initialize the page - called from lifecycle behavior
+   */
+  initialize() {
+    // Already handled in onLoad
+  },
+  
+  /**
+   * Refresh page data - called from lifecycle behavior 
+   */
+  refreshPageData() {
+    // Refresh carpool data if we have an ID
+    if (this.data.carpoolId) {
+      this.fetchCarpoolById(this.data.carpoolId);
+    }
+  },
+
+  /**
+   * ==============================================
+   * API methods
+   * ==============================================
+   */
   
   // Fetch carpool by ID
-  fetchCarpoolById(id) {
-    wx.showLoading({ title: '加载中' });
+  fetchCarpoolById: function(id) {
+    // Set loading state
     this.setData({ isLoading: true });
-
+    
+    // Show loading indicator
+    wx.showLoading({ title: '加载中' });
+    
     ApiService.getCarpoolById(id)
       .then(data => {
-        if (data) {
-          this.formatCarpoolData(data);
-        } else {
-          throw new Error('Carpool not found');
+        console.log('Carpool detail:', data);
+        
+        // Process data with carpool service
+        const processedData = CarpoolService.formatCarpoolDetail(data);
+        
+        this.setData({
+          carpool: processedData,
+          isLoading: false
+        });
+        
+        // Fetch user stats after setting carpool data
+        if (data.user_id || data.userId) {
+          this.fetchUserCarpoolCount(data.user_id || data.userId);
         }
+        
+        // Hide loading indicator
+        wx.hideLoading();
       })
       .catch(err => {
         console.error('Failed to fetch carpool:', err);
-        wx.showToast({
-          title: '未找到拼车信息',
-          icon: 'error'
+        
+        // Set error state
+        this.setData({ 
+          isLoading: false 
         });
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
-      })
-      .finally(() => {
+        
+        // Hide loading indicator
         wx.hideLoading();
-        this.setData({ isLoading: false });
+        
+        // Show error message
+        wx.showToast({
+          title: '获取拼车详情失败',
+          icon: 'none',
+          duration: 2000
+        });
       });
   },
-
-  // Format carpool data for display
-  formatCarpoolData(carpool) {
-    // Handle the new Prisma schema field names
-    const adaptedCarpool = {
-      ...carpool,
-      departure_time: carpool.departureTime || carpool.departure_time,
-      create_time: carpool.createdAt || carpool.create_time,
-      number_of_people: carpool.numberOfPeople || carpool.number_of_people,
-      share_fare: carpool.shareFare !== undefined ? carpool.shareFare : carpool.share_fare,
-      // Extract nickname and avatar from user relation if available
-      nickname: carpool.user ? carpool.user.nickname : carpool.nickname,
-      avatar: carpool.user ? carpool.user.avatar : carpool.avatar,
-      // Get wechat directly from carpool object
-      wechat: carpool.wechat || '',
-      userId: carpool.user ? carpool.user.id : carpool.userId
-    };
-    
-    // Format departure date and time
-    let departure_date = adaptedCarpool.departure_date;
-    let departure_weekday = adaptedCarpool.departure_weekday;
-    
-    // If these are not already formatted (from the index page)
-    if (!departure_date || !departure_weekday) {
-      const departureDate = new Date(adaptedCarpool.departure_time);
-      departure_date = `${departureDate.getMonth() + 1}月${departureDate.getDate()}日`;
-      
-      // Get weekday name in Chinese
-      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-      departure_weekday = weekdays[departureDate.getDay()];
-    }
-    
-    // Format time ago if not already formatted
-    let timeAgo = adaptedCarpool.timeAgo;
-    if (!timeAgo && adaptedCarpool.create_time) {
-      timeAgo = this.getTimeAgo(new Date(adaptedCarpool.create_time));
-    }
-    
-    // Format carpool data
-    const formattedCarpool = {
-      ...adaptedCarpool,
-      departure_date: departure_date,
-      departure_weekday: departure_weekday,
-      timeAgo: timeAgo || '刚刚'
-    };
-    
-    this.setData({
-      carpool: formattedCarpool,
-      isLoading: false
-    });
-    
-    // Fetch user's carpool count if userId is available
-    if (adaptedCarpool.userId) {
-      this.fetchUserCarpoolCount(adaptedCarpool.userId);
-    }
-  },
-
-  // Fetch the user's completed carpool count
-  fetchUserCarpoolCount(userId) {
+  
+  // Fetch user carpool post count
+  fetchUserCarpoolCount: function(userId) {
     ApiService.getUserCarpoolStats(userId)
       .then(stats => {
-        if (stats && stats.completedCount !== undefined) {
-          this.setData({
-            carpoolCount: stats.completedCount
-          });
-        }
+        console.log('User stats:', stats);
+        // Set both userStats and a derived carpoolCount for the UI
+        const totalCount = (stats.completedCount || 0) + (stats.upcomingCount || 0);
+        this.setData({ 
+          userStats: stats,
+          carpoolCount: totalCount 
+        });
       })
       .catch(err => {
-        console.error('Failed to fetch user carpool stats:', err);
-        // Keep the default count if there's an error
+        console.error('Failed to fetch user stats:', err);
+        // Set default value in case of error
+        this.setData({ carpoolCount: 0 });
       });
   },
-
-  // Calculate time ago
-  getTimeAgo(date) {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    const minute = 60;
-    const hour = minute * 60;
-    const day = hour * 24;
-    
-    if (diffInSeconds < minute) {
-      return '刚刚';
-    } else if (diffInSeconds < hour) {
-      const minutes = Math.floor(diffInSeconds / minute);
-      return `${minutes}分钟前`;
-    } else if (diffInSeconds < day) {
-      const hours = Math.floor(diffInSeconds / hour);
-      return `${hours}小时前`;
-    } else {
-      const days = Math.floor(diffInSeconds / day);
-      return `${days}天前`;
-    }
-  },
-
-  // Go back to previous page
-  goBack() {
+  
+  /**
+   * ==============================================
+   * UI interaction methods
+   * ==============================================
+   */
+  
+  // Navigate back
+  goBack: function() {
     wx.navigateBack();
   },
-
-  // Copy WeChat ID to clipboard
-  copyWechat() {
-    if (!this.data.carpool || !this.data.carpool.wechat) {
-      wx.showToast({
-        title: '微信号不可用',
-        icon: 'none'
+  
+  // Copy WeChat ID
+  copyWechat: function() {
+    const wechatId = this.data.carpool.wechat;
+    
+    if (wechatId) {
+      wx.setClipboardData({
+        data: wechatId,
+        success: () => {
+          UIStateManager.showSuccess('微信号已复制');
+        }
       });
-      return;
+    } else {
+      UIStateManager.showError(this, new Error('WeChat ID not available'), null, true, '微信号不可用');
     }
-    
-    const wechat = this.data.carpool.wechat;
-    
-    wx.setClipboardData({
-      data: wechat,
-      success: () => {
-        wx.showToast({
-          title: '已复制微信号',
-          icon: 'success'
-        });
-      },
-      fail: () => {
-        wx.showToast({
-          title: '复制失败',
-          icon: 'none'
-        });
-      }
-    });
   },
-
-  // Handle share button tap
-  onShareTap() {
+  
+  // Open share modal
+  onShareTap: function() {
     this.setData({ showShareModal: true });
   },
-
+  
   // Close share modal
-  closeShareModal() {
+  closeShareModal: function() {
     this.setData({ showShareModal: false });
   },
-
-  // Generate poster for sharing
-  generatePoster() {
-    wx.showToast({
-      title: '正在生成海报',
-      icon: 'loading',
-      duration: 2000
+  
+  // Generate and show poster
+  generatePoster: function() {
+    // First, ensure the user is logged in
+    this.checkUserLogin().then(() => {
+      if (this.data.hasUserInfo) {
+        this.setData({
+          'poster.show': true,
+          'poster.saving': true
+        });
+        
+        // Call API to generate poster
+        ApiService.generateCarpoolPoster(this.data.carpoolId)
+          .then(result => {
+            this.setData({
+              'poster.path': result.posterUrl,
+              'poster.saving': false
+            });
+          })
+          .catch(err => {
+            console.error('Failed to generate poster:', err);
+            this.setData({
+              'poster.saving': false
+            });
+            
+            UIStateManager.showError(this, err, null, true, '生成海报失败');
+          });
+      } else {
+        this.setData({ showWechatPrompt: true });
+      }
+    }).catch(err => {
+      console.error('Authentication check failed:', err);
+      this.setData({ showWechatPrompt: true });
     });
-    
-    // In a real app, you would create a poster image here
-    setTimeout(() => {
-      wx.showToast({
-        title: '海报生成功能开发中',
-        icon: 'none'
-      });
-      this.closeShareModal();
-    }, 2000);
   },
-
-  // Share to WeChat friends
-  onShareAppMessage() {
+  
+  // Share to friend
+  onShareAppMessage: function() {
     const carpool = this.data.carpool;
     if (!carpool) return {};
     
     return {
-      title: `${carpool.type === 'needCar' ? '人找车' : '车找人'}: ${carpool.departure_date} ${carpool.departure_weekday}`,
-      path: `/pages/index/index`, // Direct to index page since we don't store the detail
-      imageUrl: '' // Can add a custom share image
+      title: `${carpool.departure_date} ${carpool.type === 'needCar' ? '人找车' : '车找人'}`,
+      path: `/pages/detail/detail?id=${this.data.carpoolId}`,
+      imageUrl: '/images/share-default.png'
     };
   }
 }); 

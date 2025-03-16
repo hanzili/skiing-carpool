@@ -39,21 +39,6 @@
     </view>
   </block>
 
-  <!-- 编辑弹窗组件 -->
-  <edit-modal
-    showModal="{{showEditModal}}"
-    editingPost="{{editingPost}}"
-    isSubmitting="{{isSubmittingEdit}}"
-    peopleRange="{{peopleRange}}"
-    bind:contentInput="onEditContentInput"
-    bind:wechatInput="onEditWechatInput"
-    bind:timeChange="onEditDepartureTimeChange"
-    bind:peopleChange="onEditPeopleChange"
-    bind:shareFareChange="onShareFareChange"
-    bind:submit="onEditSubmit"
-    bind:cancel="onEditCancel"
-  />
-
   <!-- 登录弹窗组件 -->
   <login-modal 
     visible="{{showWechatPrompt}}"
@@ -61,4 +46,19 @@
     bind:loginerror="onLoginError"
     bind:cancel="onLoginCancel"
   />
-</view> 
+</view>
+
+<!-- 编辑弹窗组件 - 移至容器外部确保正确的层叠顺序 -->
+<edit-modal
+  showModal="{{showEditModal}}"
+  editingPost="{{editingPost}}"
+  isSubmitting="{{isSubmittingEdit}}"
+  peopleRange="{{peopleRange}}"
+  bind:contentInput="onEditContentInput"
+  bind:wechatInput="onEditWechatInput"
+  bind:timeChange="onEditDepartureTimeChange"
+  bind:peopleChange="onEditPeopleChange" 
+  bind:shareFareChange="onShareFareChange"
+  bind:submit="onEditSubmit"
+  bind:cancel="onEditCancel"
+/> 

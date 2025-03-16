@@ -27,15 +27,30 @@ const formatToLocaleString = (date) => {
 const formatToDateOnly = (date) => {
   if (!date) return '';
   
+  console.log('formatToDateOnly input:', date, typeof date);
+  
   // First check if it's already in YYYY-MM-DD format
   if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return date; // Already in the correct format, return as is
   }
   
-  // Check if it's in MM-DD format (like "04-15")
+  // Check if it's in MM-DD HH:MM format (like "03-15 00:00")
+  if (typeof date === 'string' && date.match(/^(\d{2})-(\d{2})\s+\d{2}:\d{2}$/)) {
+    const match = date.match(/^(\d{2})-(\d{2})/);
+    if (match) {
+      const month = match[1];
+      const day = match[2];
+      const currentYear = new Date().getFullYear();
+      console.log(`Detected MM-DD HH:MM format, transforming to: ${currentYear}-${month}-${day}`);
+      return `${currentYear}-${month}-${day}`;
+    }
+  }
+  
+  // Explicit handling for "MM-DD" format (without spaces)
   if (typeof date === 'string' && date.match(/^(\d{2})-(\d{2})$/)) {
     const [, month, day] = date.match(/^(\d{2})-(\d{2})$/);
     const currentYear = new Date().getFullYear();
+    console.log(`Detected MM-DD format, transforming to: ${currentYear}-${month}-${day}`);
     return `${currentYear}-${month}-${day}`;
   }
   
@@ -204,9 +219,40 @@ const formatToISO = (dateInput) => {
   }
 };
 
+/**
+ * Debug function to help diagnose date issues across platforms
+ * @param {string} dateString - The date string to debug
+ */
+const debugDateFormat = (dateString) => {
+  console.log('=== DATE DEBUG ===');
+  console.log('Original:', dateString);
+  console.log('Type:', typeof dateString);
+  
+  // Test different regex patterns
+  console.log('Matches YYYY-MM-DD:', dateString.match(/^\d{4}-\d{2}-\d{2}$/) !== null);
+  console.log('Matches MM-DD:', dateString.match(/^(\d{2})-(\d{2})$/) !== null);
+  console.log('Matches MM-DD HH:MM:', dateString.match(/^(\d{2})-(\d{2})\s+\d{2}:\d{2}$/) !== null);
+  
+  // Test different parsing methods
+  const dateObj = new Date(dateString);
+  console.log('Valid date object:', !isNaN(dateObj.getTime()));
+  if (!isNaN(dateObj.getTime())) {
+    console.log('Year:', dateObj.getFullYear());
+    console.log('Month:', dateObj.getMonth() + 1);
+    console.log('Day:', dateObj.getDate());
+    console.log('Hours:', dateObj.getHours());
+    console.log('Minutes:', dateObj.getMinutes());
+  }
+  
+  // Test the formatted result
+  console.log('formatToDateOnly result:', formatToDateOnly(dateString));
+  console.log('=== END DEBUG ===');
+};
+
 module.exports = {
   formatToLocaleString,
   formatToDateOnly,
   isDateExpired,
-  formatToISO
+  formatToISO,
+  debugDateFormat
 }; 

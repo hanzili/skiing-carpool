@@ -68,9 +68,37 @@ Component({
       if (post) {
         // Format the departure time to just show date using DateUtils
         let departureTime = post.departureTime || post.departure_time || '';
+        
+        console.log('Original departure time before formatting:', departureTime);
+        
+        // Ensure we have a valid date format for the date picker
         if (departureTime) {
-          departureTime = DateUtils.formatToDateOnly(departureTime);
+          // Try to format using DateUtils first
+          const formattedDate = DateUtils.formatToDateOnly(departureTime);
+          console.log('Formatted using DateUtils:', formattedDate);
+          
+          // If the formatting result is empty or invalid, try a direct approach
+          if (!formattedDate || !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            console.log('DateUtils formatting failed, trying direct approach');
+            
+            // Try to extract month and day from MM-DD format
+            if (typeof departureTime === 'string') {
+              const dateMatch = departureTime.match(/(\d{2})-(\d{2})/);
+              if (dateMatch) {
+                const month = dateMatch[1];
+                const day = dateMatch[2];
+                const currentYear = new Date().getFullYear();
+                departureTime = `${currentYear}-${month}-${day}`;
+                console.log('Direct formatting result:', departureTime);
+              }
+            }
+          } else {
+            // Use the successfully formatted date
+            departureTime = formattedDate;
+          }
         }
+        
+        console.log('Final departure time after formatting:', departureTime);
         
         // Get the number of people with better error handling
         let numberOfPeople;
@@ -120,6 +148,8 @@ Component({
           content: String(post.content || ''),
           wechatID: String(post.wechatID || post.wechat || '')
         };
+        
+        console.log('Setting localEditingPost with departureTime:', normalizedPost.departureTime);
         
         this.setData({
           localEditingPost: normalizedPost
@@ -224,13 +254,21 @@ Component({
       const value = e.detail.value;
       console.log('New departure time selected:', value);
       
+      // Ensure we have a valid YYYY-MM-DD format
+      let formattedDate = value;
+      if (value && !value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        console.log('Date picker returned non-standard format, attempting to fix');
+        formattedDate = DateUtils.formatToDateOnly(value);
+        console.log('Reformatted date:', formattedDate);
+      }
+      
       // Just use the date without time
       this.setData({
-        'localEditingPost.departureTime': value
+        'localEditingPost.departureTime': formattedDate
       });
       
       // Also trigger the event for compatibility with parent page
-      this.triggerEvent('timeChange', { value });
+      this.triggerEvent('timeChange', { value: formattedDate });
     },
     
     // Decrease number of people

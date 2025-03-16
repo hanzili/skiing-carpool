@@ -2,14 +2,14 @@
 const ENV = {
   // For development using local network IP (replace with your computer's IP address on your network)
   // Example: 'http://192.168.1.100'
-  LOCAL_IP: 'http://172.31.161.55:3000',
+  LOCAL_IP: 'http://192.168.2.12:3000',
   
   // For production with your actual backend server
   PRODUCTION: 'https://api.znpdx.com'
 };
 
 // Select which environment to use
-const CURRENT_ENV = ENV.PRODUCTION;
+const CURRENT_ENV = ENV.LOCAL_IP;
 
 const API_CONFIG = {
   // For WeChat mini programs, direct localhost requests don't work
@@ -23,11 +23,16 @@ const API_CONFIG = {
     healthCheck: '/',
     dbTest: '/db-test',
     
+    // Auth endpoints
+    login: '/api/users/login',
+    refreshToken: '/api/users/refresh-token', // Add token refresh endpoint
+    
     // Carpool endpoints - updated for Prisma backend
     getAllCarpools: '/api/carpools/getall',
+    getCarpoolById: '/api/carpools', // ID will be appended with a slash
     createCarpool: '/api/carpools',
-    updateCarpool: '/api/carpools/',
-    deleteCarpool: '/api/carpools/',
+    updateCarpool: '/api/carpools', // ID will be appended with a slash
+    deleteCarpool: '/api/carpools', // ID will be appended with a slash
     myPosts: '/api/carpools/user/me',
     
     // Filter endpoints - updated for Prisma backend
@@ -38,7 +43,6 @@ const API_CONFIG = {
     searchCarpools: '/api/carpools/search',
     
     // User endpoints
-    login: '/api/users/login',
     myInfo: '/api/users/me', // 需要JWT认证
     userCarpoolStats: '/api/users/stats' // 获取用户拼车统计信息
   }

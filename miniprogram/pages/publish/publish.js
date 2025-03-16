@@ -1,8 +1,24 @@
 import ApiService from '../../services/api.js';
 import AuthService from '../../services/auth.js';
+import authBehavior from '../../behaviors/auth-behavior';
+import lifecycleBehavior from '../../behaviors/lifecycle-behavior';
+import UIStateManager from '../../utils/ui-state-manager.js';
+import FormManager from '../../utils/form-manager.js';
 
 Page({
+  /**
+   * Behaviors
+   */
+  behaviors: [authBehavior, lifecycleBehavior],
+  
+  /**
+   * Page data
+   */
   data: {
+    // Tab bar configuration
+    tabBarIndex: 1,
+    
+    // Form data
     type: 'needCar', // default: need a car
     content: '',
     wechat: '', // This is the WeChat ID field for contact purposes
@@ -11,15 +27,58 @@ Page({
     departureDate: '',
     peopleChoices: [1, 2, 3, 4, 5, 6, 7, 8],
     peopleIndex: 0,
+    
+    // UI state
     isSubmitting: false,
     hasSubmitted: false,
-    hasUserInfo: false,
-    userInfo: null,
-    showWechatPrompt: false,
     isLoading: true
   },
 
+  /**
+   * ==============================================
+   * Lifecycle methods (standard)
+   * ==============================================
+   */
   onLoad() {
+    this.onPageLoad();
+  },
+
+  onShow() {
+    this.onPageShow();
+  },
+  
+  onUnload() {
+    console.log('[LIFECYCLE] Publish page unloaded');
+    
+    // Reset any ongoing operations if the user navigates away
+    if (this.data.isSubmitting) {
+      console.log('[LIFECYCLE] Page unloaded while submitting - resetting state');
+      this.setData({ isSubmitting: false });
+    }
+  },
+  
+  onBackPress() {
+    // Check if the user has entered content but not submitted
+    if ((this.data.content || this.data.wechat) && !this.data.hasSubmitted) {
+      return UIStateManager.showConfirmation(
+        '确认离开',
+        '您已经输入了信息，离开将丢失这些内容。确定要离开吗？'
+      );
+    }
+    // Return false to let the default back behavior happen
+    return false;
+  },
+
+  /**
+   * ==============================================
+   * Custom lifecycle methods (from behaviors)
+   * ==============================================
+   */
+  
+  /**
+   * Initialize the page - called from lifecycle behavior
+   */
+  initialize() {
     // 设置最小日期为今天
     const today = new Date();
     const minDate = today.toISOString().split('T')[0];
@@ -29,92 +88,53 @@ Page({
       isLoading: true 
     });
     
-    // 检查登录状态
+    // Check login status - from auth behavior
     this.checkUserLogin();
   },
   
-  // 检查用户是否已登录 - 保持与 my-posts 页面一致的方法
-  async checkUserLogin() {
-    try {
-      // Use AuthService to check login status
-      if (AuthService.isLoggedIn()) {
-        const userInfo = AuthService.getUserInfo();
-        
-        // User is logged in
-        this.setData({
-          userInfo,
-          hasUserInfo: true,
-          showWechatPrompt: false,
-          isLoading: false
-        });
-      } else {
-        // User is not logged in, show login prompt
-        this.setData({ 
-          hasUserInfo: false,
-          showWechatPrompt: true,
-          isLoading: false 
-        });
-      }
-    } catch (error) {
-      console.error('Failed to check login status:', error);
-      this.setData({ 
-        hasUserInfo: false,
-        showWechatPrompt: true,
-        isLoading: false 
-      });
+  /**
+   * Called after successful login - from auth behavior
+   */
+  onLoginSuccess() {
+    this.setData({ isLoading: false });
+  },
+  
+  /**
+   * Called when login check fails - from auth behavior
+   */
+  onLoginFailed() {
+    this.setData({ isLoading: false });
+  },
+  
+  /**
+   * Refresh page data - called from lifecycle behavior
+   */
+  refreshPageData() {
+    // No need to refresh data for publish page
+    // Just ensure login status is checked
+    if (!this.data.hasUserInfo) {
+      this.checkUserLogin();
     }
   },
+
+  /**
+   * ==============================================
+   * Form input methods
+   * ==============================================
+   */
   
-  // Handle login event from login-modal component
-  onLogin(e) {
-    const { code, userInfo } = e.detail;
-    
-    // Use the AuthService to handle login
-    AuthService.login(code, userInfo)
-      .then(result => {
-        if (result && result.token) {
-          this.setData({
-            userInfo,
-            hasUserInfo: true,
-            showWechatPrompt: false
-          });
-          
-          wx.showToast({
-            title: '登录成功',
-            icon: 'success'
-          });
-        }
-      })
-      .catch(error => {
-        console.error('Login failed:', error);
-        wx.showToast({
-          title: '登录失败',
-          icon: 'none'
-        });
-      });
-  },
-  
-  // Handle login error event from login-modal
-  onLoginError(e) {
-    console.error('Login error:', e.detail.error);
-    wx.showToast({
-      title: '登录失败',
-      icon: 'none'
-    });
-  },
-  
-  // Handle cancel event from login-modal
-  onLoginCancel() {
-    this.setData({ showWechatPrompt: false });
-  },
-  
-  // Switch between "Need Car" and "Need People" types
+  /**
+   * Switch between "Need Car" and "Need People" types
+   * @param {Object} e - Event with type data
+   */
   switchType(e) {
     const type = e.currentTarget.dataset.type;
     this.setData({ type });
   },
 
-  // Close the publish page and return to the previous page
+  /**
+   * Close the publish page and return to the previous page
+   */
   onClose() {
     // Use navigateBack to return to the previous page
     wx.navigateBack({
@@ -122,7 +142,9 @@ Page({
     });
   },
 
-  // Increase people counter
+  /**
+   * Increase people counter
+   */
   increasePeople() {
     const { peopleIndex, peopleChoices } = this.data;
     if (peopleIndex < peopleChoices.length - 1) {
@@ -132,7 +154,9 @@ Page({
     }
   },
 
-  // Decrease people counter
+  /**
+   * Decrease people counter
+   */
   decreasePeople() {
     const { peopleIndex } = this.data;
     if (peopleIndex > 0) {
@@ -142,25 +166,44 @@ Page({
     }
   },
 
-  // Content input event handler
+  /**
+   * Content input event handler
+   * @param {Object} e - Input event
+   */
   onContentInput(e) {
-    this.setData({ content: e.detail.value });
+    FormManager.handleInputChange(this, {
+      currentTarget: { dataset: { field: 'content' } },
+      detail: { value: e.detail.value }
+    });
   },
 
-  // WeChat input handler (renamed from onNicknameInput)
+  /**
+   * WeChat input handler
+   * @param {Object} e - Input event
+   */
   onWechatInput(e) {
-    this.setData({ wechat: e.detail.value });
+    FormManager.handleInputChange(this, {
+      currentTarget: { dataset: { field: 'wechat' } },
+      detail: { value: e.detail.value }
+    });
   },
 
-  // Date picker change handler
+  /**
+   * Date picker change handler
+   * @param {Object} e - Date picker event
+   */
   onDateChange(e) {
-    this.setData({
-      departureDate: e.detail.value
+    FormManager.handleInputChange(this, {
+      currentTarget: { dataset: { field: 'departureDate' } },
+      detail: { value: e.detail.value }
     });
     this.formatDepartureTime();
   },
 
-  // Compile date with default time (00:00) into a single timestamp
+  /**
+   * Compile date with default time (00:00) into a single timestamp
+   * @returns {string|null} - Formatted departure time
+   */
   formatDepartureTime() {
     const { departureDate } = this.data;
     if (departureDate) {
@@ -172,25 +215,39 @@ Page({
     return null;
   },
 
-  // Toggle share fare option
+  /**
+   * Toggle share fare option
+   * @param {Object} e - Toggle event
+   */
   toggleShareFare(e) {
     if (e && e.detail) {
-      this.setData({ shareFare: e.detail.value });
+      FormManager.handleSwitchChange(this, {
+        currentTarget: { dataset: { field: 'shareFare' } },
+        detail: { value: e.detail.value }
+      });
     } else {
       this.setData({ shareFare: !this.data.shareFare });
     }
   },
 
-  // Number of people picker change handler
+  /**
+   * Number of people picker change handler
+   * @param {Object} e - Picker event
+   */
   onPeopleChange(e) {
-    this.setData({ peopleIndex: e.detail.value });
+    FormManager.handleInputChange(this, {
+      currentTarget: { dataset: { field: 'peopleIndex' } },
+      detail: { value: e.detail.value }
+    });
   },
 
-  // Reset the form
+  /**
+   * Reset the form
+   */
   resetForm() {
-    this.setData({
+    FormManager.resetForm(this, {
       content: '',
-      wechat: '', // Reset WeChat field
+      wechat: '',
       departureDate: '',
       departureTime: '',
       shareFare: false,
@@ -200,17 +257,25 @@ Page({
     });
   },
 
-  // Validate form and submit
+  /**
+   * ==============================================
+   * Form submission
+   * ==============================================
+   */
+  
+  /**
+   * Validate form and submit
+   */
   onSubmit() {
-    // Check if all required fields are filled
-    const { content, wechat, departureTime, peopleIndex } = this.data;
-    const isFormValid = content && wechat && departureTime && peopleIndex >= 0;
+    // Validate form
+    const { isValid, errors } = FormManager.validateForm(
+      this.data,
+      ['content', 'wechat', 'departureTime'],
+      {}
+    );
     
-    if (!isFormValid) {
-      wx.showToast({
-        title: '请填写所有必填项',
-        icon: 'none'
-      });
+    if (!isValid) {
+      UIStateManager.showError(this, { message: '表单验证错误' }, null, true, '请填写所有必填项');
       return;
     }
     
@@ -227,55 +292,51 @@ Page({
     this.submitData();
   },
   
-  // Submit data to the server
+  /**
+   * Submit data to the server
+   */
   async submitData() {
     try {
-      // Show loading indicator
-      this.setData({ isSubmitting: true });
-      
-      // Format the data for API - use the new Prisma field names and include wechat
-      const carpoolData = {
+      // Format the data for API
+      const carpoolData = FormManager.prepareCarpoolData({
         type: this.data.type,
         content: this.data.content,
-        wechat: this.data.wechat, // Include WeChat contact info
+        wechat: this.data.wechat,
         departureTime: this.formatDepartureTime(),
         shareFare: this.data.shareFare,
-        numberOfPeople: this.data.peopleChoices[this.data.peopleIndex]
-      };
-      
-      // Submit to API
-      const result = await ApiService.createCarpool(carpoolData);
-      
-      // Reset form and show success message
-      this.resetForm();
-      this.setData({ 
-        isSubmitting: false,
-        hasSubmitted: true 
+        peopleChoices: this.data.peopleChoices,
+        peopleIndex: this.data.peopleIndex
       });
       
-      wx.showToast({
-        title: '发布成功',
-        icon: 'success',
-        duration: 2000
-      });
-      
-      // Navigate back to the index page after a short delay
-      setTimeout(() => {
-        wx.switchTab({
-          url: '/pages/index/index'
-        });
-      }, 1500);
+      // Use UI state manager to handle API operation
+      await UIStateManager.handleApiOperation(
+        this,
+        () => ApiService.createCarpool(carpoolData),
+        '提交中',
+        '发布成功',
+        '发布失败',
+        'isSubmitting',
+        () => {
+          // Reset form on success
+          this.resetForm();
+          this.setData({ hasSubmitted: true });
+          
+          // Navigate back to the index page after a short delay
+          setTimeout(() => {
+            wx.switchTab({
+              url: '/pages/index/index'
+            });
+          }, 1500);
+        }
+      );
     } catch (error) {
       console.error('提交失败:', error);
       this.setData({ isSubmitting: false });
       
       if (error.message && error.message.includes('401')) {
         // Authentication error - prompt login again
-        wx.showToast({
-          title: '请先登录',
-          icon: 'none',
-          duration: 2000
-        });
+        UIStateManager.showError(this, error, null, true, '请先登录');
+        
         // Clear existing tokens and show login prompt
         AuthService.logout();
         this.setData({ 
@@ -283,23 +344,8 @@ Page({
           showWechatPrompt: true
         });
       } else {
-        wx.showToast({
-          title: '发布失败',
-          icon: 'error',
-          duration: 2000
-        });
+        UIStateManager.showError(this, error, null, true, '发布失败');
       }
     }
-  },
-
-  onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({
-        selected: 1
-      });
-    }
-    
-    // Recheck login status when page is shown
-    this.checkUserLogin();
   }
 });
